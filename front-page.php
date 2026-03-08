@@ -7,7 +7,7 @@
 get_header(); // Swellのヘッダー
 ?>
 
-<div class="anthropic-page">
+<main class="anthropic-page">
 
     <!-- ヒーローセクション -->
     <section class="hero-section">
@@ -29,12 +29,12 @@ get_header(); // Swellのヘッダー
 
     <!-- ビジュアルセクション -->
     <div class="visual-wrapper">
-        <section class="visual-section js-fade-in">
+        <section class="visual-section js-fade-in" aria-label="ビジュアル">
             <div class="visual__col visual__col--left">
-                <img src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/img/visual-desert.jpg" alt="" class="visual__img">
+                <img src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/img/visual-desert.jpg" alt="砂漠の風景" class="visual__img" loading="lazy">
             </div>
             <div class="visual__col visual__col--right">
-                <img src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/img/hero-bg.jpg" alt="" class="visual__img">
+                <img src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/img/hero-bg.jpg" alt="技術イメージ" class="visual__img" loading="lazy">
             </div>
         </section>
     </div>
@@ -100,30 +100,55 @@ foreach ($content_tabs as &$t) {
 }
 unset($t);
 ?>
-            <div class="contents__tabs js-fade-in" role="tablist">
+            <div class="contents__tabs js-fade-in" role="tablist" aria-label="カテゴリ別コンテンツ">
                 <?php foreach ($content_tabs as $idx => $tab): ?>
                 <button class="contents__tab<?php echo $idx === 0 ? ' is-active' : ''; ?>"
                         role="tab"
+                        id="tab-<?php echo esc_attr($tab['slug']); ?>"
                         data-tab="<?php echo esc_attr($tab['slug']); ?>"
-                        aria-selected="<?php echo $idx === 0 ? 'true' : 'false'; ?>">
+                        aria-selected="<?php echo $idx === 0 ? 'true' : 'false'; ?>"
+                        aria-controls="panel-<?php echo esc_attr($tab['slug']); ?>"
+                        tabindex="<?php echo $idx === 0 ? '0' : '-1'; ?>">
                     <?php echo esc_html($tab['label']); ?>
                 </button>
                 <?php endforeach; ?>
             </div>
 
-            <?php foreach ($content_tabs as $idx => $tab):
-                $cat = get_category_by_slug($tab['slug']);
-                $tab_posts = new WP_Query(array(
-                    'post_type'      => 'post',
-                    'posts_per_page' => 6,
-                    'category_name'  => $tab['slug'],
-                    'orderby'        => 'date',
-                    'order'          => 'DESC',
-                ));
+            <?php
+            // 「その他」タブ用：他タブのカテゴリIDを収集
+            $exclude_slugs = array('sap', 'abap', 'ai', 'development', 'news');
+            $exclude_cat_ids = array();
+            foreach ($exclude_slugs as $es) {
+                $ec = get_category_by_slug($es);
+                if ($ec) $exclude_cat_ids[] = $ec->term_id;
+            }
+
+            foreach ($content_tabs as $idx => $tab):
+                if ($tab['slug'] === 'others') {
+                    $tab_query_args = array(
+                        'post_type'        => 'post',
+                        'posts_per_page'   => 6,
+                        'category__not_in' => $exclude_cat_ids,
+                        'orderby'          => 'date',
+                        'order'            => 'DESC',
+                    );
+                } else {
+                    $tab_query_args = array(
+                        'post_type'      => 'post',
+                        'posts_per_page' => 6,
+                        'category_name'  => $tab['slug'],
+                        'orderby'        => 'date',
+                        'order'          => 'DESC',
+                    );
+                }
+                $tab_posts = new WP_Query($tab_query_args);
             ?>
             <div class="contents__panel<?php echo $idx === 0 ? ' is-active' : ''; ?>"
                  role="tabpanel"
-                 data-panel="<?php echo esc_attr($tab['slug']); ?>">
+                 id="panel-<?php echo esc_attr($tab['slug']); ?>"
+                 aria-labelledby="tab-<?php echo esc_attr($tab['slug']); ?>"
+                 data-panel="<?php echo esc_attr($tab['slug']); ?>"
+                 tabindex="0">
                 <?php if ($tab_posts->have_posts()): ?>
                 <div class="contents__grid">
                     <?php while ($tab_posts->have_posts()): $tab_posts->the_post(); ?>
@@ -210,7 +235,7 @@ endif;
     <section class="news">
         <div class="news__inner">
             <h2 class="news__heading js-fade-in">News</h2>
-            <dl class="news__list js-fade-in">
+            <ul class="news__list js-fade-in">
                 <?php
 $news_posts = new WP_Query(array(
     'post_type'      => 'post',
@@ -224,107 +249,28 @@ if ($news_posts->have_posts()):
         $news_posts->the_post();
         $cats = get_the_category();
 ?>
-                <div class="news__item">
-                    <dt class="news__meta">
+                <li class="news__item">
+                    <span class="news__meta">
                         <time class="news__date"><?php echo get_the_date('Y.m.d'); ?></time>
                         <?php if (!empty($cats)): ?>
                         <span class="news__tag"><?php echo esc_html($cats[0]->name); ?></span>
                         <?php endif; ?>
-                    </dt>
-                    <dd class="news__title">
+                    </span>
+                    <span class="news__title">
                         <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-                    </dd>
-                </div>
+                    </span>
+                </li>
                 <?php
     endwhile;
     wp_reset_postdata();
 else:
 ?>
-                <p class="news__empty">ニュースはまだありません。「news」タグを付けた記事を公開すると表示されます。</p>
+                <p class="news__empty">ニュースはまだありません。「news」カテゴリの記事を公開すると表示されます。</p>
                 <?php endif; ?>
-            </dl>
+            </ul>
         </div>
     </section>
 
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    /* フェードインアニメーション */
-    var observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.15 });
-
-    document.querySelectorAll('.js-fade-in').forEach(function(el) {
-        observer.observe(el);
-    });
-
-    /* Contentsタブ切り替え */
-    document.querySelectorAll('.contents__tab').forEach(function(tab) {
-        tab.addEventListener('click', function() {
-            var slug = this.dataset.tab;
-            document.querySelectorAll('.contents__tab').forEach(function(t) {
-                t.classList.remove('is-active');
-                t.setAttribute('aria-selected', 'false');
-            });
-            document.querySelectorAll('.contents__panel').forEach(function(p) {
-                p.classList.remove('is-active');
-                if (p.getAttribute('data-panel') === slug) {
-                    p.classList.add('is-active');
-                }
-            });
-            this.classList.add('is-active');
-            this.setAttribute('aria-selected', 'true');
-        });
-    });
-
-    /* 特集：スクロール展開 + 横スクロール */
-    var wrapper = document.querySelector('.featured-banner-wrapper');
-    var pin = document.querySelector('.featured-pin');
-    var track = document.querySelector('.featured-track');
-
-    if (wrapper && pin && track) {
-        var panels = track.querySelectorAll('.featured-panel');
-        var panelCount = panels.length;
-        var ticking = false;
-
-        function update() {
-            var pinRect = pin.getBoundingClientRect();
-            var pinH = pin.offsetHeight;
-            var windowH = window.innerHeight;
-            var scrolled = -pinRect.top;
-            var scrollable = pinH - windowH;
-
-            /* 展開アニメーション（最初の画面分） */
-            var expandEnd = windowH * 0.5;
-            var expand = Math.min(1, Math.max(0, scrolled / expandEnd));
-            wrapper.style.setProperty('--expand', expand);
-
-            /* 横スクロール（展開後〜最後） */
-            var hStart = expandEnd;
-            var hRange = scrollable - expandEnd;
-            var hProgress = Math.min(1, Math.max(0, (scrolled - hStart) / hRange));
-            var maxShift = (panelCount - 1) * 100;
-            track.style.transform = 'translateX(-' + (hProgress * maxShift / panelCount) + '%)';
-
-            ticking = false;
-        }
-
-        window.addEventListener('scroll', function() {
-            if (!ticking) {
-                requestAnimationFrame(update);
-                ticking = true;
-            }
-        }, { passive: true });
-
-        update();
-    }
-});
-</script>
+</main>
 
 <?php get_footer(); // Swellのフッター ?>

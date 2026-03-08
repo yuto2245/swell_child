@@ -16,16 +16,17 @@ WordPress SWELL テーマの子テーマで、**Anthropic風の洗練されたUI
 ```
 swell_child/
 ├── style.css            # 全カスタムCSS（Anthropic風デザインシステム）
-├── functions.php        # 子テーマ関数（style.css読み込み）
+├── functions.php        # 子テーマ関数（CSS/JS/Fonts読み込み）
 ├── front-page.php       # トップページテンプレート
 ├── screenshot.png       # テーマスクリーンショット
 ├── CLAUDE.md            # このファイル
+├── js/
+│   └── front-page.js    # トップページ用JS（タブ、フェードイン、スクロール制御）
 ├── img/
 │   ├── visual-desert.jpg  # ビジュアルセクション左画像
 │   └── hero-bg.jpg        # ビジュアルセクション右画像
 ├── design/              # デザイン参考資料（開発用）
 │   ├── design_system.md
-│   ├── www.anthropic.com_.png
 │   ├── current_website_design.png
 │   ├── design_image1.png
 │   ├── design_sample1.png
@@ -56,16 +57,26 @@ swell_child/
 - `--color-border: #E8E8ED` / `--color-accent: #1D1D1F`
 
 ### フォント
-- メイン: `Inter` + `Noto Sans JP`
-- セリフ: `Crimson Pro`
+- メイン: `Inter` + `Noto Sans JP`（functions.phpでwp_enqueue_style経由、preconnect付き）
+
+### スペーシングスケール
+`--space-2xs(4)` → `--space-xs(8)` → `--space-sm(16)` → `--space-ms(24)` → `--space-md(32)` → `--space-lg(64)` → `--space-xl(96)` → `--space-2xl(120)`
+
+### 角丸
+- `--radius-sm: 4px` — カード、画像コンテナ
+- `--radius-pill: 100px` — タブ、タグ、CTAボタン
 
 ### イージング
-- `--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1)`
-- `--ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1)`
+- `--ease-out-expo` — メイン（フェードイン、スクロール）
+- `--ease-out-quart` — サブ（画像ホバー、ボーダー変化）
+
+### カードのホバー
+- `border-color` 変更のみ（box-shadow、translateY は使わない）
 
 ### アクセシビリティ
 - `prefers-reduced-motion` 対応済み
-- タブUI: `role="tab"` / `role="tabpanel"` / `aria-selected`
+- タブUI: `role="tab"` / `role="tabpanel"` / `aria-selected` / キーボードナビ（矢印キー）
+- `:focus-visible` スタイル全要素対応
 
 ## WordPress カテゴリ要件
 
@@ -116,3 +127,26 @@ claude
 | 画像が表示されない | `get_stylesheet_directory_uri()`を使用 |
 | ブロックエディタで「ブロックされました」 | SWELLライセンス認証を確認 |
 | style.css編集でテーマ名が変わった | テーマヘッダーコメントを保持すること |
+
+## Design Context
+
+### Users
+SAP professionals, ABAP developers, IT decision makers, and general tech readers visiting a Japanese SAP/AI technical blog. They come to find reliable technical articles, evaluate SAP solutions, and stay current on AI and development topics. The audience ranges from hands-on engineers to management—all expect authority and clarity.
+
+### Brand Personality
+**Modern, Minimal, Intelligent.** The site should feel like a peer among Anthropic and OpenAI—a credible, forward-thinking voice in the SAP and AI space. Not corporate-stuffy, but quietly confident.
+
+### Aesthetic Direction
+- **Visual tone**: Clean, restrained, typographically driven. Warm neutrals with generous whitespace. Content takes center stage.
+- **Primary reference**: Anthropic.com — the warm palette, editorial spacing, and understated motion design.
+- **Secondary references**: OpenAI, Claude.ai — surface texture quality, intelligent layouts.
+- **Anti-references**: Cluttered WordPress blogs, heavy gradient hero banners, overly colorful SaaS landing pages, generic template aesthetics.
+- **Theme**: Light mode primary. Dark sections used sparingly for contrast (Featured, Footer).
+- **Shape language**: No border-radius, no box-shadows, no overlapping card elements. Sharp, flat, editorial.
+
+### Design Principles
+1. **Content over chrome** — Every visual decision should make the content easier to read, not compete with it. Decoration is removed, not added.
+2. **Quiet confidence** — The design communicates expertise through restraint. Generous spacing, considered typography, and deliberate absence of ornament signal quality.
+3. **Motion with purpose** — Animations exist to orient the reader (scroll-driven reveals, fade-ins) not to entertain. Respect `prefers-reduced-motion`.
+4. **Typographic hierarchy** — Use weight, size, case, and spacing to create clear information layers. Small uppercase labels (14px) for section heads, large display type for hero statements.
+5. **Warm minimalism** — Not cold or sterile. The warm neutral palette (#F8F7F5) and editorial serif accents (Crimson Pro) keep the minimalism inviting.

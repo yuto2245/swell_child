@@ -1,7 +1,6 @@
 # SAP-JP デザインシステム
 
 ## 参考デザイン
-- `www.anthropic.com_.png` - Anthropic公式サイト（メインリファレンス）
 - `design_image1.png` - 互い違い画像配置の参考
 - `design_sample1.png` - OpenAI風デザインサンプル
 - `openai.png` - OpenAIサイト参考
@@ -26,15 +25,36 @@
 
 ## フォント
 - **メイン**: Inter + Noto Sans JP（400, 500, 600）
-- **セリフ**: Crimson Pro（未使用だが読み込み済み）
+- functions.phpでwp_enqueue_style経由、preconnect付き
 
 ## スペーシング
-- `--space-xs`: 8px
-- `--space-sm`: 16px
-- `--space-md`: 32px
-- `--space-lg`: 64px
-- `--space-xl`: 96px
-- `--space-2xl`: 120px
+
+| 変数名 | 値 | 用途例 |
+|--------|-----|--------|
+| `--space-2xs` | 4px | 微小ギャップ、バッジpadding |
+| `--space-xs` | 8px | タブgap、小マージン |
+| `--space-sm` | 16px | カード内padding、標準gap |
+| `--space-ms` | 24px | カード本文padding、グリッドgap |
+| `--space-md` | 32px | セクション内マージン |
+| `--space-lg` | 64px | コンテナpadding |
+| `--space-xl` | 96px | セクション間padding |
+| `--space-2xl` | 120px | 大セクション間padding |
+
+## 角丸
+
+| 変数名 | 値 | 用途 |
+|--------|-----|------|
+| `--radius-sm` | 4px | カード、画像コンテナ |
+| `--radius-pill` | 100px | タブ、タグ、CTAボタン |
+
+**方針**: box-shadow は使わない。ホバーは border-color 変更のみ。
+
+## イージング
+
+| 変数名 | 用途 |
+|--------|------|
+| `--ease-out-expo` | メインアニメーション（フェードイン、スクロール制御） |
+| `--ease-out-quart` | サブアニメーション（画像ホバー、ボーダー変化） |
 
 ## ブレークポイント
 - タブレット: `max-width: 1024px`
