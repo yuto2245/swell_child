@@ -1,6 +1,93 @@
 document.addEventListener('DOMContentLoaded', function() {
     'use strict';
 
+    /* パーティクルアニメーション（ライト背景用） */
+    var canvas = document.getElementById('star-canvas');
+    if (canvas) {
+        var ctx = canvas.getContext('2d');
+        var particles = [];
+        var dpr = window.devicePixelRatio || 1;
+
+        /* パーティクルの色パレット（淡い青・紫・グレー） */
+        var colors = [
+            { r: 120, g: 160, b: 255 },
+            { r: 160, g: 120, b: 220 },
+            { r: 100, g: 190, b: 210 },
+            { r: 180, g: 180, b: 195 }
+        ];
+
+        function resizeCanvas() {
+            var rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+
+        function createParticles() {
+            var w = canvas.width / dpr;
+            var h = canvas.height / dpr;
+            var count = Math.floor((w * h) / 2500);
+            particles = [];
+            for (var i = 0; i < count; i++) {
+                var c = colors[Math.floor(Math.random() * colors.length)];
+                particles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    r: Math.random() * 2 + 0.5,
+                    color: c,
+                    alpha: Math.random() * 0.15 + 0.05,
+                    vy: (Math.random() - 0.5) * 0.15,
+                    vx: (Math.random() - 0.5) * 0.1,
+                    pulseSpeed: Math.random() * 0.006 + 0.002,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function draw(time) {
+            var w = canvas.width / dpr;
+            var h = canvas.height / dpr;
+            ctx.clearRect(0, 0, w, h);
+
+            for (var i = 0; i < particles.length; i++) {
+                var p = particles[i];
+
+                /* ゆっくり漂う */
+                p.x += p.vx;
+                p.y += p.vy;
+
+                /* 画面端で折り返し */
+                if (p.x < -10) p.x = w + 10;
+                if (p.x > w + 10) p.x = -10;
+                if (p.y < -10) p.y = h + 10;
+                if (p.y > h + 10) p.y = -10;
+
+                /* 脈動 */
+                var pulse = Math.sin(time * p.pulseSpeed + p.phase) * 0.4 + 0.6;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(' + p.color.r + ',' + p.color.g + ',' + p.color.b + ',' + (p.alpha * pulse) + ')';
+                ctx.fill();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        resizeCanvas();
+        createParticles();
+        requestAnimationFrame(draw);
+
+        var resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                resizeCanvas();
+                createParticles();
+            }, 200);
+        });
+    }
+
     /* フェードインアニメーション */
     var observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {

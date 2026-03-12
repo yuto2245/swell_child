@@ -9,8 +9,15 @@ get_header(); // Swellのヘッダー
 
 <main class="anthropic-page">
 
-    <!-- ヒーローセクション -->
+    <!-- ヒーローセクション（ダーク + ビデオ + マーキー） -->
     <section class="hero-section">
+        <!-- Space Background -->
+        <div class="hero-stars" aria-hidden="true">
+            <canvas id="star-canvas"></canvas>
+        </div>
+        <div class="hero-overlay" aria-hidden="true"></div>
+
+        <!-- Hero Content -->
         <div class="hero-container">
             <div class="hero-content">
                 <h1 class="hero-title">
@@ -23,6 +30,25 @@ get_header(); // Swellのヘッダー
                 <p class="hero-subtitle">
                     SAPは世界中の企業を支える基幹システムです。SAP-JPは、SAPプロフェッショナルのキャリア形成と最新技術の実践的な情報をお届けします。
                 </p>
+                <a href="<?php echo esc_url(home_url('/chat')); ?>" class="hero-cta">Try chat →</a>
+            </div>
+        </div>
+
+        <!-- Logo Marquee -->
+        <div class="hero-marquee">
+            <div class="hero-marquee__label">Topics we<br>cover</div>
+            <div class="hero-marquee__track-wrap">
+                <div class="hero-marquee__track">
+                    <?php
+                    $brands = array('S/4HANA', 'ABAP', 'Fiori', 'BTP', 'AI', 'SAP Basis', 'RFC', 'CDS View');
+                    for ($loop = 0; $loop < 2; $loop++):
+                        foreach ($brands as $brand):
+                    ?>
+                    <div class="hero-marquee__item">
+                        <span class="hero-marquee__name"><?php echo esc_html($brand); ?></span>
+                    </div>
+                    <?php endforeach; endfor; ?>
+                </div>
             </div>
         </div>
     </section>
@@ -66,10 +92,10 @@ if ($featured_posts->have_posts()):
                         <?php endif; ?>
                     </div>
                     <div class="featured-panel__body">
-                        <span class="featured-panel__label">Featured</span>
+                        <span class="featured-panel__label">特集</span>
                         <h2 class="featured-panel__title"><?php the_title(); ?></h2>
                         <p class="featured-panel__excerpt"><?php echo esc_html(mb_substr(get_the_excerpt(), 0, 60)); ?>…</p>
-                        <span class="featured-panel__cta">Read more →</span>
+                        <span class="featured-panel__cta">続きを読む →</span>
                     </div>
                 </a>
                 <?php
