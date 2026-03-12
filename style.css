@@ -555,10 +555,14 @@ body {
   }
 
   .visual__col--right {
-    margin-top: 0;
+    margin-top: var(--space-md);
   }
 
-  /* Featured */
+  /* Featured — スクロール量縮小 */
+  .featured-pin {
+    height: 200vh;
+  }
+
   .featured-banner-wrapper {
     --inset: calc(20px * (1 - var(--expand)));
   }
@@ -586,14 +590,39 @@ body {
     font-size: var(--text-sm);
   }
 
-  /* Popular */
+  /* Popular — 横型コンパクトレイアウト */
   .popular__grid {
     grid-template-columns: 1fr;
     gap: var(--space-sm);
   }
 
+  .popular__link {
+    display: flex;
+    align-items: center;
+  }
+
+  .popular__thumb {
+    width: 80px;
+    flex-shrink: 0;
+    aspect-ratio: 1;
+  }
+
   .popular__body {
+    flex: 1;
+    min-width: 0;
     padding: var(--space-sm);
+  }
+
+  .popular__title {
+    font-size: var(--text-sm);
+  }
+
+  .popular__cat {
+    display: none;
+  }
+
+  .popular__card:hover .popular__thumb img {
+    transform: none;
   }
 
   .popular__heading,
@@ -623,14 +652,62 @@ body {
     padding: 0 var(--space-sm);
   }
 
+  /* Contents — タブのスクロールバー非表示 + 右端フェードヒント */
+  .contents__tabs {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+  }
+
+  .contents__tabs::-webkit-scrollbar {
+    display: none;
+  }
+
   .contents__tab {
     padding: 10px var(--space-sm);
     font-size: var(--text-xs);
   }
 
+  /* Contents — 横型コンパクトレイアウト */
   .contents__grid {
     grid-template-columns: 1fr;
     gap: var(--space-sm);
+  }
+
+  .contents__card {
+    display: flex;
+    align-items: center;
+    overflow: visible;
+  }
+
+  .contents__thumb {
+    width: 80px;
+    min-width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    aspect-ratio: auto;
+    border-radius: var(--radius-sm);
+  }
+
+  .contents__thumb img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+  }
+
+  .contents__body {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-sm);
+  }
+
+  .contents__name {
+    font-size: var(--text-sm);
+  }
+
+  .contents__card:hover .contents__thumb img {
+    transform: none;
   }
 }
 
