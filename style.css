@@ -1141,6 +1141,20 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
 }
 
+/* 追従ヘッダー（.l-fixHeader）のガラスデザイン
+   SWELLは::beforeで背景を描画しているため::beforeにbackdrop-filterを適用する */
+.l-fixHeader {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.l-fixHeader::before {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  opacity: 1 !important;
+}
+
 .l-header .c-gnav a {
   font-size: 14px !important;
   font-weight: 500 !important;
