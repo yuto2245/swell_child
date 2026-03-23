@@ -19,6 +19,31 @@ add_action('wp_head', function() {
 }, 1);
 
 /**
+ * SVGロゴ
+ */
+add_filter( 'swell_parts_head_logo', function( $html, $is_fixbar ) {
+	$site_name = get_bloginfo( 'name' );
+	$home_url  = home_url( '/' );
+
+	$svg = '<svg class="c-siteLogo__icon" viewBox="0 0 44 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor">'
+		. '<path fill-rule="evenodd" clip-rule="evenodd" d="'
+		. 'M9 0C4.029 0 0 4.029 0 9V23C0 27.971 4.029 32 9 32H35C39.971 32 44 27.971 44 23V9C44 4.029 39.971 0 35 0H9Z'
+		. 'M14 7C11.239 7 9 9.239 9 12V20C9 22.761 11.239 25 14 25H30C32.761 25 35 22.761 35 20V12C35 9.239 32.761 7 30 7H14Z'
+		. '"/>'
+		. '</svg>';
+
+	$tag = is_front_page() ? 'h1' : 'p';
+
+	return '<' . $tag . ' class="c-headLogo c-siteLogo">'
+		. '<a href="' . esc_url( $home_url ) . '" title="' . esc_attr( $site_name ) . '" class="c-headLogo__link c-siteLogo__link" rel="home">'
+		. $svg
+		. '<span class="c-siteLogo__name">' . esc_html( $site_name ) . '</span>'
+		. '</a>'
+		. '</' . $tag . '>';
+}, 10, 2 );
+
+
+/**
  * 子テーマでのファイルの読み込み
  */
 add_action('wp_enqueue_scripts', function() {

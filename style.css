@@ -1133,6 +1133,38 @@ body {
   padding-right: 0 !important;
 }
 
+/* ============================================================
+   SVGロゴ
+============================================================ */
+.c-siteLogo {
+  display: flex;
+  align-items: center;
+}
+
+.c-siteLogo__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.c-siteLogo__icon {
+  width: 36px;
+  height: 26px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.c-siteLogo__name {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  line-height: 1;
+}
+
 /* ヘッダーをシンプルに（すりガラス効果） */
 .l-header {
   background: rgba(255, 255, 255, 0.85) !important;
