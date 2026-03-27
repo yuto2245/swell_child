@@ -65,4 +65,42 @@ add_action('wp_enqueue_scripts', function() {
 		wp_enqueue_script( 'front-page-js', get_stylesheet_directory_uri() . '/js/front-page.js', [], $js_timestamp, true );
 	}
 
+	/* Prism.js シンタックスハイライト（記事ページ） */
+	if ( is_singular() ) {
+		wp_enqueue_style(
+			'prismjs-core',
+			'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css',
+			[],
+			'1.29.0'
+		);
+
+		wp_enqueue_script(
+			'prismjs-core',
+			'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js',
+			[],
+			'1.29.0',
+			true
+		);
+
+		/* Prism.js 追加言語（よく使うもの） */
+		$prism_langs = [
+			'python', 'javascript', 'typescript', 'php', 'bash',
+			'json', 'yaml', 'sql', 'java', 'go', 'css', 'markup',
+			'diff', 'ruby', 'csharp',
+		];
+		foreach ( $prism_langs as $lang ) {
+			wp_enqueue_script(
+				"prismjs-{$lang}",
+				"https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-{$lang}.min.js",
+				['prismjs-core'],
+				'1.29.0',
+				true
+			);
+		}
+
+		/* コードブロック UI（コピーボタン・タブ切り替え） */
+		$cb_timestamp = date( 'Ymdgis', filemtime( get_stylesheet_directory() . '/js/code-block.js' ) );
+		wp_enqueue_script( 'code-block-js', get_stylesheet_directory_uri() . '/js/code-block.js', ['prismjs-core'], $cb_timestamp, true );
+	}
+
 }, 11);
