@@ -85,7 +85,16 @@ if ($featured_posts->have_posts()):
 ?>
                 <a href="<?php the_permalink(); ?>" class="featured-panel">
                     <div class="featured-panel__img">
-                        <?php if (has_post_thumbnail()): ?>
+                        <?php
+                        $youtube_id = get_post_meta(get_the_ID(), 'swell_meta_youtube', true);
+                        if (!empty($youtube_id)): ?>
+                            <div class="featured-panel__yt">
+                                <img src="https://img.youtube.com/vi/<?php echo esc_attr($youtube_id); ?>/maxresdefault.jpg"
+                                     alt="<?php the_title_attribute(); ?>"
+                                     loading="lazy">
+                                <span class="featured-panel__play" aria-hidden="true"></span>
+                            </div>
+                        <?php elseif (has_post_thumbnail()): ?>
                             <?php the_post_thumbnail('full'); ?>
                         <?php else: ?>
                             <div class="featured-panel__placeholder"></div>
