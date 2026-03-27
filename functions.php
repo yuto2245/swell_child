@@ -67,13 +67,7 @@ add_action('wp_enqueue_scripts', function() {
 
 	/* Prism.js シンタックスハイライト（記事ページ） */
 	if ( is_singular() ) {
-		wp_enqueue_style(
-			'prismjs-core',
-			'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css',
-			[],
-			'1.29.0'
-		);
-
+		/* Prism.js コア（デフォルトCSSは読み込まない — style.cssでAnthropicテーマを定義済み） */
 		wp_enqueue_script(
 			'prismjs-core',
 			'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js',
@@ -82,25 +76,34 @@ add_action('wp_enqueue_scripts', function() {
 			true
 		);
 
-		/* Prism.js 追加言語（よく使うもの） */
-		$prism_langs = [
-			'abap', 'python', 'javascript', 'typescript', 'php', 'bash',
-			'json', 'yaml', 'sql', 'java', 'go', 'css', 'markup',
-			'diff', 'ruby', 'csharp',
-		];
-		foreach ( $prism_langs as $lang ) {
-			wp_enqueue_script(
-				"prismjs-{$lang}",
-				"https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-{$lang}.min.js",
-				['prismjs-core'],
-				'1.29.0',
-				true
-			);
-		}
+		/* Prism.js 追加言語（jsDelivrバンドルで1リクエストにまとめる） */
+		wp_enqueue_script(
+			'prismjs-langs',
+			'https://cdn.jsdelivr.net/combine/'
+				. 'npm/prismjs@1.29.0/components/prism-abap.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-python.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-javascript.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-typescript.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-php.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-bash.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-json.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-yaml.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-sql.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-java.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-go.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-css-extras.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-markup.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-diff.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-ruby.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-csharp.min.js',
+			['prismjs-core'],
+			'1.29.0',
+			true
+		);
 
 		/* コードブロック UI（コピーボタン・タブ切り替え） */
 		$cb_timestamp = date( 'Ymdgis', filemtime( get_stylesheet_directory() . '/js/code-block.js' ) );
-		wp_enqueue_script( 'code-block-js', get_stylesheet_directory_uri() . '/js/code-block.js', ['prismjs-core'], $cb_timestamp, true );
+		wp_enqueue_script( 'code-block-js', get_stylesheet_directory_uri() . '/js/code-block.js', ['prismjs-langs'], $cb_timestamp, true );
 	}
 
 }, 11);
