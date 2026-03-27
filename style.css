@@ -456,6 +456,47 @@ body {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* YouTube サムネイル + 再生アイコン */
+.featured-panel__yt {
+  position: relative;
+  width: 100%;
+}
+
+.featured-panel__yt img {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.featured-panel__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  transition: background 0.3s var(--ease-out-quart);
+}
+
+.featured-panel__play::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 54%;
+  transform: translate(-50%, -50%);
+  border-style: solid;
+  border-width: 8px 0 8px 14px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.featured-panel:hover .featured-panel__play {
+  background: rgba(0, 0, 0, 0.8);
+}
+
 /* テキスト（右半分） */
 .featured-panel__body {
   flex: 1;
