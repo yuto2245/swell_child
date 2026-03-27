@@ -1,6 +1,7 @@
 /**
  * Anthropic風コードブロック
- * - WordPress標準コードブロックの自動ラップ（ヘッダー + コピーボタン付与）
+ * - WordPress標準コードブロックの自動ラップ（フローティング言語ラベル + コピーアイコン）
+ * - 行番号の自動付与
  * - コードグループ（タブ切り替え）
  * - Clipboard API によるコピー機能
  */
@@ -19,47 +20,52 @@
     '<polyline points="20 6 9 17 4 12"/>' +
     '</svg>';
 
+  var ICON_CHEVRON =
+    '<svg class="c-codeBlock__lang-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+    '<polyline points="6 9 12 15 18 9"/>' +
+    '</svg>';
+
   /* ========== 言語名の表示マッピング ========== */
   var LANG_MAP = {
-    js: 'JavaScript',
-    javascript: 'JavaScript',
-    ts: 'TypeScript',
-    typescript: 'TypeScript',
-    py: 'Python',
-    python: 'Python',
-    php: 'PHP',
-    html: 'HTML',
-    css: 'CSS',
-    scss: 'SCSS',
-    sass: 'Sass',
-    json: 'JSON',
-    xml: 'XML',
-    yaml: 'YAML',
-    yml: 'YAML',
-    sql: 'SQL',
-    bash: 'Bash',
-    shell: 'Shell',
-    sh: 'Shell',
-    zsh: 'Zsh',
-    powershell: 'PowerShell',
-    ruby: 'Ruby',
-    rb: 'Ruby',
-    go: 'Go',
-    rust: 'Rust',
-    java: 'Java',
-    kotlin: 'Kotlin',
-    swift: 'Swift',
-    c: 'C',
-    cpp: 'C++',
-    csharp: 'C#',
-    cs: 'C#',
-    abap: 'ABAP',
-    markdown: 'Markdown',
-    md: 'Markdown',
-    diff: 'Diff',
-    dockerfile: 'Dockerfile',
-    docker: 'Docker',
-    curl: 'cURL'
+    js: 'javascript',
+    javascript: 'javascript',
+    ts: 'typescript',
+    typescript: 'typescript',
+    py: 'python',
+    python: 'python',
+    php: 'php',
+    html: 'html',
+    css: 'css',
+    scss: 'scss',
+    sass: 'sass',
+    json: 'json',
+    xml: 'xml',
+    yaml: 'yaml',
+    yml: 'yaml',
+    sql: 'sql',
+    bash: 'bash',
+    shell: 'shell',
+    sh: 'shell',
+    zsh: 'zsh',
+    powershell: 'powershell',
+    ruby: 'ruby',
+    rb: 'ruby',
+    go: 'go',
+    rust: 'rust',
+    java: 'java',
+    kotlin: 'kotlin',
+    swift: 'swift',
+    c: 'c',
+    cpp: 'c++',
+    csharp: 'c#',
+    cs: 'c#',
+    abap: 'abap',
+    markdown: 'markdown',
+    md: 'markdown',
+    diff: 'diff',
+    dockerfile: 'dockerfile',
+    docker: 'docker',
+    curl: 'curl'
   };
 
   /**
@@ -72,10 +78,10 @@
   }
 
   /**
-   * 言語キーを表示名に変換
+   * 言語キーを表示名に変換（小文字のまま）
    */
   function langLabel(key) {
-    return LANG_MAP[key] || (key ? key.toUpperCase() : 'Code');
+    return LANG_MAP[key] || key || '';
   }
 
   /**
@@ -84,13 +90,27 @@
   function handleCopy(btn, codeEl) {
     var text = codeEl.textContent || '';
     navigator.clipboard.writeText(text).then(function () {
-      btn.innerHTML = ICON_CHECK + 'Copied!';
+      btn.innerHTML = ICON_CHECK;
       btn.classList.add('is-copied');
       setTimeout(function () {
-        btn.innerHTML = ICON_COPY + 'Copy';
+        btn.innerHTML = ICON_COPY;
         btn.classList.remove('is-copied');
       }, 2000);
     });
+  }
+
+  /**
+   * コードを行ごとにspanでラップ（行番号用）
+   */
+  function wrapLines(codeEl) {
+    /* Prism.jsのハイライト済みHTML内の行をラップする */
+    var html = codeEl.innerHTML;
+    /* 末尾の改行を除去して空行番号を防ぐ */
+    html = html.replace(/\n$/, '');
+    var lines = html.split('\n');
+    codeEl.innerHTML = lines.map(function (line) {
+      return '<span class="c-codeBlock__line">' + (line || ' ') + '</span>';
+    }).join('\n');
   }
 
   /* ========== WordPress標準コードブロックをラップ ========== */
@@ -105,42 +125,44 @@
       if (!codeEl) return;
 
       var lang = detectLang(codeEl);
+      var label = langLabel(lang);
 
-      // ラッパー作成
+      /* 行番号を付与 */
+      wrapLines(codeEl);
+
+      /* ラッパー作成 */
       var wrapper = document.createElement('div');
       wrapper.className = 'c-codeBlock';
 
-      // ヘッダー
-      var header = document.createElement('div');
-      header.className = 'c-codeBlock__header';
+      /* 言語ラベル（フローティング） */
+      if (label) {
+        var langSpan = document.createElement('span');
+        langSpan.className = 'c-codeBlock__lang';
+        langSpan.innerHTML = label + ' ' + ICON_CHEVRON;
+        wrapper.appendChild(langSpan);
+      }
 
-      var langSpan = document.createElement('span');
-      langSpan.className = 'c-codeBlock__lang';
-      langSpan.textContent = langLabel(lang);
-
+      /* コピーボタン（アイコンのみ） */
       var copyBtn = document.createElement('button');
       copyBtn.className = 'c-codeBlock__copy';
       copyBtn.type = 'button';
       copyBtn.setAttribute('aria-label', 'Copy code');
-      copyBtn.innerHTML = ICON_COPY + 'Copy';
+      copyBtn.innerHTML = ICON_COPY;
       copyBtn.addEventListener('click', function () {
         handleCopy(copyBtn, codeEl);
       });
+      wrapper.appendChild(copyBtn);
 
-      header.appendChild(langSpan);
-      header.appendChild(copyBtn);
-
-      // ボディ
+      /* ボディ */
       var body = document.createElement('div');
       body.className = 'c-codeBlock__body';
 
-      // 既存のpreをボディ内に移動
+      /* 既存の pre を移動 */
       block.parentNode.insertBefore(wrapper, block);
       body.appendChild(block);
-      wrapper.appendChild(header);
       wrapper.appendChild(body);
 
-      // wp-block-codeの元スタイルをリセット
+      /* wp-block-code の元スタイルをリセット */
       block.style.margin = '0';
       block.style.borderRadius = '0';
     });
@@ -160,11 +182,17 @@
 
       if (tabs.length === 0 || panels.length === 0) return;
 
-      // 初期表示
+      /* パネル内のコードに行番号を付与 */
+      panels.forEach(function (panel) {
+        var code = panel.querySelector('code');
+        if (code) wrapLines(code);
+      });
+
+      /* 初期表示 */
       tabs[0].setAttribute('aria-selected', 'true');
       panels[0].classList.add('is-active');
 
-      // タブクリック
+      /* タブクリック */
       tabs.forEach(function (tab, i) {
         tab.addEventListener('click', function () {
           tabs.forEach(function (t) { t.setAttribute('aria-selected', 'false'); });
@@ -174,7 +202,7 @@
         });
       });
 
-      // キーボード（左右矢印）
+      /* キーボード（左右矢印） */
       var tabList = group.querySelector('.c-codeGroup__tabs');
       if (tabList) {
         tabList.addEventListener('keydown', function (e) {
@@ -191,8 +219,9 @@
         });
       }
 
-      // コピーボタン
+      /* コピーボタン */
       if (copyBtn) {
+        copyBtn.innerHTML = ICON_COPY;
         copyBtn.addEventListener('click', function () {
           var active = group.querySelector('.c-codeGroup__panel.is-active code');
           if (active) handleCopy(copyBtn, active);
