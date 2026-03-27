@@ -56,6 +56,20 @@
   /* 角丸 */
   --radius-sm: 4px;
   --radius-pill: 100px;
+
+  /* コードブロック（Anthropic風） */
+  --code-bg: #2a2a2a;
+  --code-text: #e0e0e0;
+  --code-line-num: rgba(255, 255, 255, 0.22);
+  --code-comment: #6a9955;
+  --code-keyword: #c75a5a;
+  --code-string: #6bc0a0;
+  --code-function: #dcdcaa;
+  --code-number: #b5cea8;
+  --code-type: #4ec9b0;
+  --code-operator: #d4d4d4;
+  --code-property: #9cdcfe;
+  --code-font: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
 }
 
 /* ============================================================
@@ -1246,6 +1260,376 @@ body {
 
 .l-footer a:hover {
   color: white !important;
+}
+
+/* ============================================================
+   Anthropic風コードブロック
+============================================================ */
+
+/* --- コードブロック全体（一枚板構造） --- */
+.c-codeBlock {
+  position: relative;
+  margin: 2em 0;
+  border-radius: 10px;
+  background: var(--code-bg);
+  font-family: var(--code-font);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* --- 言語ラベル（コード領域内フローティング） --- */
+.c-codeBlock__lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0 0 16px;
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  user-select: none;
+}
+
+.c-codeBlock__lang-chevron {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* --- コピーボタン（右上フローティング） --- */
+.c-codeBlock__copy {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+  z-index: 1;
+}
+
+.c-codeBlock__copy:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.c-codeBlock__copy.is-copied {
+  color: var(--code-string);
+}
+
+.c-codeBlock__copy-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* --- コード本体（行番号付き） --- */
+.c-codeBlock__body {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.c-codeBlock__body pre {
+  margin: 0 !important;
+  padding: 8px 16px 16px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+.c-codeBlock__body code {
+  font-family: var(--code-font) !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  color: var(--code-text) !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  white-space: pre !important;
+  word-break: normal !important;
+  word-wrap: normal !important;
+  tab-size: 2;
+  counter-reset: line;
+}
+
+/* --- 行番号 --- */
+.c-codeBlock__line {
+  display: inline-block;
+}
+
+.c-codeBlock__line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.5em;
+  margin-right: 1.2em;
+  text-align: right;
+  color: var(--code-line-num);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* --- タブグループ --- */
+.c-codeGroup {
+  position: relative;
+  margin: 2em 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--code-bg);
+}
+
+.c-codeGroup__tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.c-codeGroup__tab {
+  position: relative;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.c-codeGroup__tab:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.c-codeGroup__tab[aria-selected="true"] {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.c-codeGroup__tab[aria-selected="true"]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: var(--code-keyword);
+  border-radius: 2px 2px 0 0;
+}
+
+.c-codeGroup__copy {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.2s ease, background 0.2s ease;
+  z-index: 1;
+}
+
+.c-codeGroup__copy:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.c-codeGroup__copy.is-copied {
+  color: var(--code-string);
+}
+
+.c-codeGroup__panel {
+  display: none;
+}
+
+.c-codeGroup__panel.is-active {
+  display: block;
+}
+
+.c-codeGroup__panel pre {
+  margin: 0 !important;
+  padding: 16px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.c-codeGroup__panel code {
+  font-family: var(--code-font) !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  color: var(--code-text) !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  white-space: pre !important;
+  tab-size: 2;
+  counter-reset: line;
+}
+
+/* --- Prism.js カスタムテーマ（Anthropic風） --- */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--code-comment);
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: rgba(224, 224, 224, 0.5);
+}
+
+.token.property,
+.token.tag {
+  color: var(--code-property);
+}
+
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol {
+  color: var(--code-number);
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: var(--code-string);
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: var(--code-operator);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: var(--code-keyword);
+}
+
+.token.function,
+.token.class-name {
+  color: var(--code-function);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: var(--code-type);
+}
+
+.token.deleted {
+  color: #f44747;
+}
+
+/* --- WordPress標準コードブロックの上書き --- */
+.wp-block-code {
+  position: relative;
+  margin: 2em 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--code-bg) !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.wp-block-code code {
+  font-family: var(--code-font) !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  color: var(--code-text) !important;
+  background: transparent !important;
+  display: block;
+  padding: 16px !important;
+  white-space: pre !important;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+/* --- インラインコード --- */
+:not(pre) > code {
+  font-family: var(--code-font) !important;
+  font-size: 0.875em !important;
+  padding: 2px 6px !important;
+  background: rgba(42, 42, 42, 0.07) !important;
+  border-radius: 4px !important;
+  color: #c75a5a !important;
+  border: none !important;
+  word-break: break-word;
+}
+
+/* --- スクロールバー（コードブロック内） --- */
+.c-codeBlock__body::-webkit-scrollbar,
+.c-codeGroup__panel::-webkit-scrollbar,
+.wp-block-code code::-webkit-scrollbar {
+  height: 6px;
+}
+
+.c-codeBlock__body::-webkit-scrollbar-track,
+.c-codeGroup__panel::-webkit-scrollbar-track,
+.wp-block-code code::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.c-codeBlock__body::-webkit-scrollbar-thumb,
+.c-codeGroup__panel::-webkit-scrollbar-thumb,
+.wp-block-code code::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+
+.c-codeBlock__body::-webkit-scrollbar-thumb:hover,
+.c-codeGroup__panel::-webkit-scrollbar-thumb:hover,
+.wp-block-code code::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* --- レスポンシブ --- */
+@media (max-width: 600px) {
+  .c-codeBlock,
+  .c-codeGroup {
+    border-radius: 8px;
+  }
+
+  .c-codeBlock__body code,
+  .c-codeGroup__panel code {
+    font-size: 13px !important;
+  }
+
+  .c-codeBlock__line::before {
+    width: 2em;
+    margin-right: 0.8em;
+  }
 }
 
 /* ============================================================
