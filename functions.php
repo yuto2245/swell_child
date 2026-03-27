@@ -84,7 +84,7 @@ add_action('wp_enqueue_scripts', function() {
 
 		/* Prism.js 追加言語（よく使うもの） */
 		$prism_langs = [
-			'python', 'javascript', 'typescript', 'php', 'bash',
+			'abap', 'python', 'javascript', 'typescript', 'php', 'bash',
 			'json', 'yaml', 'sql', 'java', 'go', 'css', 'markup',
 			'diff', 'ruby', 'csharp',
 		];
