@@ -232,6 +232,11 @@
 
   /* ========== 初期化 ========== */
   function init() {
+    /* 全言語コンポーネントロード後にハイライトを再実行 */
+    if (window.Prism) {
+      Prism.highlightAll();
+    }
+
     wrapWpCodeBlocks();
     initCodeGroups();
   }
