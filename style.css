@@ -1065,6 +1065,55 @@ body {
   padding: var(--space-md) 0;
 }
 
+/* --- Contents レスポンシブ（ベース定義の後に配置して確実に上書き） --- */
+@media (max-width: 1024px) {
+  .contents__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .contents__grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .contents__card {
+    display: flex;
+    align-items: center;
+    overflow: visible;
+  }
+
+  .contents__thumb {
+    width: 80px;
+    min-width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    aspect-ratio: auto;
+    border-radius: var(--radius-sm);
+  }
+
+  .contents__thumb img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+  }
+
+  .contents__body {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-sm);
+  }
+
+  .contents__name {
+    font-size: var(--text-sm);
+  }
+
+  .contents__card:hover .contents__thumb img {
+    transform: none;
+  }
+}
+
 /* ============================================================
    News（企業風ニュースフィード）
 ============================================================ */
