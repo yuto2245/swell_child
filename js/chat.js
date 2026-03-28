@@ -19,6 +19,10 @@
   var labelEl = document.getElementById('chat-model-label');
   var composerModelEl = document.getElementById('chat-composer-model');
 
+  /* プラスメニュー要素 */
+  var plusMenu = document.getElementById('chat-plus-menu');
+  var plusTrigger = document.getElementById('chat-plus-trigger');
+
   function init() {
     if (!window.chatConfig) return;
 
