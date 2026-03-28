@@ -57,6 +57,12 @@ if ( ! current_user_can( 'manage_options' ) ) {
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
 							<span>画像生成</span>
 						</button>
+						<div class="chat-plus-menu__divider"></div>
+						<button id="chat-reasoning-toggle" class="chat-plus-menu__item" data-action="reasoning" type="button">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+							<span>推論モード</span>
+							<span class="chat-plus-menu__toggle-indicator"></span>
+						</button>
 					</div>
 				</div>
 			</div>

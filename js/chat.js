@@ -7,6 +7,7 @@
   var currentModelType = '';
   var isStreaming = false;
   var webSearchEnabled = false;
+  var reasoningEnabled = false;
 
   var messagesContainer = document.getElementById('chat-messages');
   var textarea = document.getElementById('chat-textarea');
@@ -72,6 +73,17 @@
         wsToggle.classList.toggle('is-active', webSearchEnabled);
       });
     }
+
+    /* 推論モードトグル */
+    var rsToggle = document.getElementById('chat-reasoning-toggle');
+    if (rsToggle) {
+      rsToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        reasoningEnabled = !reasoningEnabled;
+        rsToggle.classList.toggle('is-active', reasoningEnabled);
+      });
+    }
   }
 
   function selectModel(m) {
@@ -116,6 +128,7 @@
     aiContent.innerHTML = '<span class="chat-cursor"></span>';
 
     var fullText = '';
+    var thinkingText = '';
 
     try {
       var formData = new FormData();
@@ -125,6 +138,7 @@
       formData.append('type', currentModelType);
       formData.append('messages', JSON.stringify(conversationHistory));
       formData.append('web_search', webSearchEnabled ? '1' : '0');
+      formData.append('reasoning', reasoningEnabled ? '1' : '0');
 
       var response = await fetch(chatConfig.ajaxUrl, {
         method: 'POST',
@@ -151,7 +165,18 @@
           try {
             var data = JSON.parse(jsonStr);
             if (data.error) { aiContent.innerHTML = '<span class="chat-error">Error: ' + escapeHtml(data.error) + '</span>'; break; }
-            if (data.token) { fullText += data.token; aiContent.innerHTML = renderMarkdown(fullText) + '<span class="chat-cursor"></span>'; scrollToBottom(); }
+            if (data.thinking) {
+              thinkingText += data.thinking;
+              var thinkingHtml = '<details class="chat-thinking" open><summary>思考中...</summary><div class="chat-thinking__content">' + escapeHtml(thinkingText) + '</div></details>';
+              aiContent.innerHTML = thinkingHtml + '<span class="chat-cursor"></span>';
+              scrollToBottom();
+            }
+            if (data.token) {
+              fullText += data.token;
+              var thHtml = thinkingText ? '<details class="chat-thinking"><summary>思考過程</summary><div class="chat-thinking__content">' + escapeHtml(thinkingText) + '</div></details>' : '';
+              aiContent.innerHTML = thHtml + renderMarkdown(fullText) + '<span class="chat-cursor"></span>';
+              scrollToBottom();
+            }
           } catch (e) {}
         }
       }

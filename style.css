@@ -2178,6 +2178,42 @@ body.chat-page .p-fixBtnWrap {
   transform: translateX(16px);
 }
 
+.chat-plus-menu__divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 4px 0;
+}
+
+/* 思考過程の折りたたみ */
+.chat-thinking {
+  margin-bottom: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chat-thinking summary {
+  padding: 8px 12px;
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--chat-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.chat-thinking__content {
+  padding: 8px 12px 12px;
+  font-family: var(--code-font);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--chat-text-muted);
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
 /* --- 初期状態（空チャット）--- */
 body.chat-page.is-empty .chat-messages { display: none; }
 body.chat-page.is-empty .chat-composer {
