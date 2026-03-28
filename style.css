@@ -1745,35 +1745,69 @@ body {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   height: 56px;
   background: var(--chat-composer-bg);
   border-bottom: 1px solid var(--chat-border);
   padding: 0 var(--space-sm);
+  gap: var(--space-xs);
   position: relative;
 }
 
-.chat-header__model {
-  appearance: none;
-  -webkit-appearance: none;
+/* カスタムドロップダウン */
+.chat-dropdown { position: relative; }
+
+.chat-dropdown__trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   border: none;
   background: transparent;
-  font-family: var(--font-main);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--chat-text);
   cursor: pointer;
-  padding: 6px 28px 6px 12px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23717182' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  transition: background-color 0.15s ease;
+  transition: background 0.15s ease;
 }
+.chat-dropdown__trigger:hover { background: rgba(0,0,0,0.04); }
 
-.chat-header__model:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+.chat-dropdown__icon { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+.chat-dropdown__label { font-family: var(--font-main); font-size: var(--text-sm); font-weight: 500; color: var(--chat-text); }
+.chat-dropdown__chevron { color: var(--chat-text-muted); transition: transform 0.2s ease; }
+.chat-dropdown.is-open .chat-dropdown__chevron { transform: rotate(180deg); }
+
+.chat-dropdown__menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--chat-composer-bg);
+  border: 1px solid var(--chat-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  min-width: 220px;
+  padding: 4px;
+  z-index: 100;
 }
+.chat-dropdown.is-open .chat-dropdown__menu { display: block; }
+
+.chat-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: var(--text-xs);
+  color: var(--chat-text);
+  text-align: left;
+  transition: background 0.1s ease;
+}
+.chat-dropdown__item:hover { background: rgba(0,0,0,0.04); }
+.chat-dropdown__item-icon { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
 
 .chat-header__new {
   position: absolute;

@@ -10,24 +10,43 @@
   var messagesContainer = document.getElementById('chat-messages');
   var textarea = document.getElementById('chat-textarea');
   var sendBtn = document.getElementById('chat-send');
-  var modelSelect = document.getElementById('chat-model-select');
   var newChatBtn = document.getElementById('chat-new');
+
+  /* カスタムドロップダウン要素 */
+  var dropdown = document.getElementById('chat-model-dropdown');
+  var trigger = document.getElementById('chat-model-trigger');
+  var menu = document.getElementById('chat-model-menu');
+  var iconEl = document.getElementById('chat-model-icon');
+  var labelEl = document.getElementById('chat-model-label');
 
   function init() {
     if (!window.chatConfig) return;
 
     if (chatConfig.models && chatConfig.models.length > 0) {
       chatConfig.models.forEach(function (m) {
-        var opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = m.label;
-        opt.dataset.type = m.type;
-        modelSelect.appendChild(opt);
+        var item = document.createElement('button');
+        item.className = 'chat-dropdown__item';
+        item.type = 'button';
+        item.innerHTML = '<img src="' + chatConfig.iconBaseUrl + m.icon + '" class="chat-dropdown__item-icon" alt="">'
+            + '<span>' + m.label + '</span>';
+        item.addEventListener('click', function () {
+          selectModel(m);
+          closeDropdown();
+        });
+        menu.appendChild(item);
       });
-      setModel(modelSelect);
+
+      selectModel(chatConfig.models[0]);
     }
 
-    modelSelect.addEventListener('change', function () { setModel(this); });
+    trigger.addEventListener('click', function () {
+      dropdown.classList.toggle('is-open');
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!dropdown.contains(e.target)) closeDropdown();
+    });
+
     sendBtn.addEventListener('click', handleSend);
     textarea.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -39,11 +58,16 @@
     newChatBtn.addEventListener('click', handleNewChat);
   }
 
-  function setModel(selectEl) {
-    var opt = selectEl.options[selectEl.selectedIndex];
-    currentModel = opt.value;
-    currentModelLabel = opt.textContent;
-    currentModelType = opt.dataset.type || '';
+  function selectModel(m) {
+    currentModel = m.id;
+    currentModelLabel = m.label;
+    currentModelType = m.type;
+    iconEl.src = chatConfig.iconBaseUrl + m.icon;
+    labelEl.textContent = m.label;
+  }
+
+  function closeDropdown() {
+    dropdown.classList.remove('is-open');
   }
 
   function autoResize() {
@@ -149,15 +173,15 @@
     var msg = document.createElement('div');
     msg.className = 'chat-msg chat-msg--' + role;
 
-    var labelEl = document.createElement('div');
-    labelEl.className = 'chat-msg__label';
-    labelEl.textContent = label;
+    var labelDiv = document.createElement('div');
+    labelDiv.className = 'chat-msg__label';
+    labelDiv.textContent = label;
 
     var contentEl = document.createElement('div');
     contentEl.className = 'chat-msg__content';
     contentEl.innerHTML = role === 'user' ? escapeHtml(content).replace(/\n/g, '<br>') : content;
 
-    msg.appendChild(labelEl);
+    msg.appendChild(labelDiv);
     msg.appendChild(contentEl);
     messagesContainer.appendChild(msg);
     scrollToBottom();
@@ -174,7 +198,6 @@
     return div.innerHTML;
   }
 
-  /* 軽量Markdownレンダリング */
   function renderMarkdown(text) {
     var codeBlocks = [];
     text = text.replace(/```(\w*)\n([\s\S]*?)```/g, function (_, lang, code) {
@@ -218,16 +241,16 @@
         }
         output.push(html + '</ol>');
       } else {
-        var parts = [];
+        var headingParts = [];
         for (var j = 0; j < lines.length; j++) {
           var hm = lines[j].match(/^(#{1,6})\s+(.+)/);
           if (hm) {
-            parts.push('<h' + hm[1].length + '>' + inlineFmt(hm[2]) + '</h' + hm[1].length + '>');
+            headingParts.push('<h' + hm[1].length + '>' + inlineFmt(hm[2]) + '</h' + hm[1].length + '>');
           } else {
-            parts.push(inlineFmt(lines[j]));
+            headingParts.push(inlineFmt(lines[j]));
           }
         }
-        var joined = parts.join('<br>');
+        var joined = headingParts.join('<br>');
         output.push(/^<h\d>/.test(joined) ? joined : '<p>' + joined + '</p>');
       }
     }

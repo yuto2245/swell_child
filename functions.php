@@ -262,15 +262,15 @@ function swell_child_skill_categories() {
 
 function swell_child_chat_models() {
 	return [
-		[ 'id' => 'claude-sonnet-4-5-20250929', 'label' => 'Claude Sonnet 4.5', 'type' => 'anthropic' ],
-		[ 'id' => 'claude-opus-4-1-202508054',  'label' => 'Claude Opus 4.1',   'type' => 'anthropic' ],
-		[ 'id' => 'gpt-4o-mini',                'label' => 'GPT-4o mini',       'type' => 'openai' ],
-		[ 'id' => 'gpt-4.1-2025-04-14',         'label' => 'GPT-4.1',          'type' => 'openai' ],
-		[ 'id' => 'gpt-5-chat-latest',           'label' => 'GPT-5 Chat',       'type' => 'openai' ],
-		[ 'id' => 'gemini-2.5-flash',            'label' => 'Gemini 2.5 Flash', 'type' => 'google' ],
-		[ 'id' => 'gemini-2.5-pro',              'label' => 'Gemini 2.5 Pro',   'type' => 'google' ],
-		[ 'id' => 'grok-4-0709',                 'label' => 'Grok 4',           'type' => 'xai' ],
-		[ 'id' => 'grok-4-fast-non-reasoning-latest', 'label' => 'Grok 4 Fast', 'type' => 'xai' ],
+		[ 'id' => 'claude-sonnet-4-5-20250929', 'label' => 'Claude Sonnet 4.5', 'type' => 'anthropic', 'icon' => 'claude.png' ],
+		[ 'id' => 'claude-opus-4-1-202508054',  'label' => 'Claude Opus 4.1',   'type' => 'anthropic', 'icon' => 'claude.png' ],
+		[ 'id' => 'gpt-4o-mini',                'label' => 'GPT-4o mini',       'type' => 'openai',    'icon' => 'openai.png' ],
+		[ 'id' => 'gpt-4.1-2025-04-14',         'label' => 'GPT-4.1',          'type' => 'openai',    'icon' => 'openai.png' ],
+		[ 'id' => 'gpt-5-chat-latest',           'label' => 'GPT-5 Chat',       'type' => 'openai',    'icon' => 'openai.png' ],
+		[ 'id' => 'gemini-2.5-flash',            'label' => 'Gemini 2.5 Flash', 'type' => 'google',    'icon' => 'gemini.png' ],
+		[ 'id' => 'gemini-2.5-pro',              'label' => 'Gemini 2.5 Pro',   'type' => 'google',    'icon' => 'gemini.png' ],
+		[ 'id' => 'grok-4-0709',                 'label' => 'Grok 4',           'type' => 'xai',       'icon' => 'grok.png' ],
+		[ 'id' => 'grok-4-fast-non-reasoning-latest', 'label' => 'Grok 4 Fast', 'type' => 'xai',      'icon' => 'grok.png' ],
 	];
 }
 
@@ -508,8 +508,9 @@ add_action( 'wp_enqueue_scripts', function () {
 	$ts   = file_exists( $path ) ? date( 'Ymdgis', filemtime( $path ) ) : '1';
 	wp_enqueue_script( 'chat-js', get_stylesheet_directory_uri() . '/js/chat.js', [], $ts, true );
 	wp_localize_script( 'chat-js', 'chatConfig', [
-		'restUrl' => rest_url( 'swell-child/v1/chat' ),
-		'nonce'   => wp_create_nonce( 'wp_rest' ),
-		'models'  => swell_child_chat_models(),
+		'restUrl'     => rest_url( 'swell-child/v1/chat' ),
+		'nonce'       => wp_create_nonce( 'wp_rest' ),
+		'models'      => swell_child_chat_models(),
+		'iconBaseUrl' => get_stylesheet_directory_uri() . '/img/chat/',
 	] );
 }, 20 );

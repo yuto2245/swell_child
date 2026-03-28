@@ -21,7 +21,14 @@ if ( ! current_user_can( 'manage_options' ) ) {
 <body <?php body_class( 'chat-page' ); ?>>
 
 <div class="chat-header">
-	<select id="chat-model-select" class="chat-header__model" aria-label="Model selector"></select>
+	<div id="chat-model-dropdown" class="chat-dropdown">
+		<button id="chat-model-trigger" class="chat-dropdown__trigger" type="button">
+			<img id="chat-model-icon" class="chat-dropdown__icon" src="" alt="">
+			<span id="chat-model-label" class="chat-dropdown__label"></span>
+			<svg class="chat-dropdown__chevron" width="12" height="12" viewBox="0 0 12 12"><path d="M3 5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+		</button>
+		<div id="chat-model-menu" class="chat-dropdown__menu"></div>
+	</div>
 	<button id="chat-new" class="chat-header__new" type="button">+ New Chat</button>
 </div>
 
