@@ -106,10 +106,16 @@
     var fullText = '';
 
     try {
-      var response = await fetch(chatConfig.restUrl, {
+      var formData = new FormData();
+      formData.append('action', 'swell_chat_stream');
+      formData.append('_wpnonce', chatConfig.nonce);
+      formData.append('model', currentModel);
+      formData.append('type', currentModelType);
+      formData.append('messages', JSON.stringify(conversationHistory));
+
+      var response = await fetch(chatConfig.ajaxUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': chatConfig.nonce },
-        body: JSON.stringify({ model: currentModel, type: currentModelType, messages: conversationHistory })
+        body: formData
       });
 
       if (!response.ok) throw new Error('HTTP ' + response.status);
