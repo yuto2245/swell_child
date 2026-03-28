@@ -262,15 +262,21 @@ function swell_child_skill_categories() {
 
 function swell_child_chat_models() {
 	return [
-		[ 'id' => 'claude-sonnet-4-5-20250929', 'label' => 'Claude Sonnet 4.5', 'type' => 'anthropic', 'icon' => 'claude.png' ],
-		[ 'id' => 'claude-opus-4-1-202508054',  'label' => 'Claude Opus 4.1',   'type' => 'anthropic', 'icon' => 'claude.png' ],
-		[ 'id' => 'gpt-4o-mini',                'label' => 'GPT-4o mini',       'type' => 'openai',    'icon' => 'openai.png' ],
-		[ 'id' => 'gpt-4.1-2025-04-14',         'label' => 'GPT-4.1',          'type' => 'openai',    'icon' => 'openai.png' ],
-		[ 'id' => 'gpt-5-chat-latest',           'label' => 'GPT-5 Chat',       'type' => 'openai',    'icon' => 'openai.png' ],
-		[ 'id' => 'gemini-2.5-flash',            'label' => 'Gemini 2.5 Flash', 'type' => 'google',    'icon' => 'gemini.png' ],
-		[ 'id' => 'gemini-2.5-pro',              'label' => 'Gemini 2.5 Pro',   'type' => 'google',    'icon' => 'gemini.png' ],
-		[ 'id' => 'grok-4-0709',                 'label' => 'Grok 4',           'type' => 'xai',       'icon' => 'grok.png' ],
-		[ 'id' => 'grok-4-fast-non-reasoning-latest', 'label' => 'Grok 4 Fast', 'type' => 'xai',      'icon' => 'grok.png' ],
+		// Anthropic (2026年3月)
+		[ 'id' => 'claude-opus-4-6',              'label' => 'Claude Opus 4.6',    'type' => 'anthropic', 'icon' => 'claude.png' ],
+		[ 'id' => 'claude-sonnet-4-6',            'label' => 'Claude Sonnet 4.6',  'type' => 'anthropic', 'icon' => 'claude.png' ],
+		[ 'id' => 'claude-haiku-4-5-20251001',    'label' => 'Claude Haiku 4.5',   'type' => 'anthropic', 'icon' => 'claude.png' ],
+		// OpenAI (2026年3月)
+		[ 'id' => 'gpt-5.4',                      'label' => 'GPT-5.4',           'type' => 'openai',    'icon' => 'openai.png' ],
+		[ 'id' => 'gpt-5.3-instant',              'label' => 'GPT-5.3 Instant',   'type' => 'openai',    'icon' => 'openai.png' ],
+		[ 'id' => 'o3',                            'label' => 'o3',                'type' => 'openai',    'icon' => 'openai.png' ],
+		[ 'id' => 'o4-mini',                       'label' => 'o4-mini',           'type' => 'openai',    'icon' => 'openai.png' ],
+		// Google Gemini (2026年3月)
+		[ 'id' => 'gemini-3-flash',               'label' => 'Gemini 3 Flash',    'type' => 'google',    'icon' => 'gemini.png' ],
+		[ 'id' => 'gemini-3.1-pro',               'label' => 'Gemini 3.1 Pro',    'type' => 'google',    'icon' => 'gemini.png' ],
+		// xAI (2026年3月)
+		[ 'id' => 'grok-4.20-0309',               'label' => 'Grok 4.20',         'type' => 'xai',       'icon' => 'grok.png' ],
+		[ 'id' => 'grok-4.1',                     'label' => 'Grok 4.1',          'type' => 'xai',       'icon' => 'grok.png' ],
 	];
 }
 
