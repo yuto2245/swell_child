@@ -8,6 +8,7 @@
   var isStreaming = false;
   var webSearchEnabled = false;
   var reasoningEnabled = false;
+  var selectedSkills = [];
 
   var messagesContainer = document.getElementById('chat-messages');
   var textarea = document.getElementById('chat-textarea');
@@ -84,6 +85,42 @@
         rsToggle.classList.toggle('is-active', reasoningEnabled);
       });
     }
+
+    /* スキル選択 */
+    var skillsBtn = document.getElementById('chat-skills-btn');
+    if (skillsBtn) {
+      skillsBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        loadSkillsList();
+      });
+    }
+  }
+
+  function loadSkillsList() {
+    var fd = new FormData();
+    fd.append('action', 'swell_chat_skills');
+    fd.append('_wpnonce', chatConfig.nonce);
+    fetch(chatConfig.ajaxUrl, { method: 'POST', body: fd })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res.success || !res.data || res.data.length === 0) {
+          alert('スキルが見つかりません');
+          return;
+        }
+        var names = res.data.map(function (s) { return s.title; });
+        var chosen = prompt('使用するスキルを選択（カンマ区切りで番号）:\n' + names.map(function (n, i) { return (i + 1) + '. ' + n; }).join('\n'));
+        if (!chosen) return;
+        selectedSkills = [];
+        chosen.split(',').forEach(function (num) {
+          var idx = parseInt(num.trim(), 10) - 1;
+          if (idx >= 0 && idx < res.data.length) {
+            selectedSkills.push(res.data[idx].id);
+          }
+        });
+        var btn = document.getElementById('chat-skills-btn');
+        if (btn) btn.classList.toggle('is-active', selectedSkills.length > 0);
+      });
   }
 
   function selectModel(m) {
@@ -139,6 +176,9 @@
       formData.append('messages', JSON.stringify(conversationHistory));
       formData.append('web_search', webSearchEnabled ? '1' : '0');
       formData.append('reasoning', reasoningEnabled ? '1' : '0');
+      if (selectedSkills.length > 0) {
+        formData.append('skills', JSON.stringify(selectedSkills));
+      }
 
       var response = await fetch(chatConfig.ajaxUrl, {
         method: 'POST',

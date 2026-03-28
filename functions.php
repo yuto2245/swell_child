@@ -327,6 +327,10 @@ function swell_child_ajax_chat_handler() {
 	$messages = json_decode( wp_unslash( isset( $_POST['messages'] ) ? $_POST['messages'] : '[]' ), true );
 	$web_search = ! empty( $_POST['web_search'] ) && $_POST['web_search'] === '1';
 	$reasoning  = ! empty( $_POST['reasoning'] ) && $_POST['reasoning'] === '1';
+	$skill_ids  = isset( $_POST['skills'] ) ? json_decode( wp_unslash( $_POST['skills'] ), true ) : array();
+	if ( ! is_array( $skill_ids ) ) { $skill_ids = array(); }
+	/* スキルIDをサニタイズ */
+	$skill_ids = array_map( 'sanitize_text_field', $skill_ids );
 
 	/* ホワイトリスト検証 */
 	$allowed_models = array_column( swell_child_chat_models(), 'id' );
@@ -356,7 +360,7 @@ function swell_child_ajax_chat_handler() {
 
 	try {
 		switch ( $type ) {
-			case 'anthropic': swell_child_stream_anthropic( $model, $clean, $web_search, $reasoning ); break;
+			case 'anthropic': swell_child_stream_anthropic( $model, $clean, $web_search, $reasoning, $skill_ids ); break;
 			case 'openai':    swell_child_stream_openai( $model, $clean, $web_search, $reasoning );    break;
 			case 'google':    swell_child_stream_google( $model, $clean, $web_search, $reasoning );    break;
 			case 'xai':       swell_child_stream_xai( $model, $clean, $web_search, $reasoning );      break;
@@ -373,7 +377,7 @@ function swell_child_ajax_chat_handler() {
 
 /* --- ストリーミング: Anthropic --- */
 
-function swell_child_stream_anthropic( $model, $messages, $web_search = false, $reasoning = false ) {
+function swell_child_stream_anthropic( $model, $messages, $web_search = false, $reasoning = false, $skill_ids = array() ) {
 	$key = get_option( 'swell_child_anthropic_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'Anthropic API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -390,11 +394,23 @@ function swell_child_stream_anthropic( $model, $messages, $web_search = false, $
 		$body['max_tokens'] = 16000;
 	}
 
+	/* Skills対応: container.skillsとベータヘッダー */
+	$headers = array( 'Content-Type: application/json', 'x-api-key: ' . $key, 'anthropic-version: 2023-06-01' );
+	if ( ! empty( $skill_ids ) ) {
+		$headers[] = 'anthropic-beta: code-execution-2025-08-25,skills-2025-10-02,files-api-2025-04-14';
+		$skills_param = array();
+		foreach ( $skill_ids as $sid ) {
+			$skills_param[] = array( 'type' => 'custom', 'skill_id' => $sid, 'version' => 'latest' );
+		}
+		$body['container'] = array( 'skills' => $skills_param );
+		$body['tools'] = array( array( 'type' => 'code_execution_20250825', 'name' => 'code_execution' ) );
+	}
+
 	$buffer = '';
 	$ch = curl_init( 'https://api.anthropic.com/v1/messages' );
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
-		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'x-api-key: ' . $key, 'anthropic-version: 2023-06-01' ],
+		CURLOPT_HTTPHEADER => $headers,
 		CURLOPT_POSTFIELDS => wp_json_encode( $body ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
@@ -556,6 +572,46 @@ function swell_child_parse_openai_sse( $chunk, &$buffer ) {
 		if ( $t !== '' ) { echo "data: " . wp_json_encode( array( 'token' => $t ) ) . "\n\n"; flush(); }
 	}
 }
+
+/* --- Claude Skills一覧取得（AJAX） --- */
+
+add_action( 'wp_ajax_swell_chat_skills', function () {
+	if ( ! current_user_can( 'manage_options' ) ) { wp_send_json_error( 'Unauthorized', 403 ); }
+	check_ajax_referer( 'swell_chat_nonce', '_wpnonce' );
+
+	$cached = get_transient( 'swell_child_chat_skills' );
+	if ( false !== $cached ) { wp_send_json_success( $cached ); }
+
+	$key = get_option( 'swell_child_anthropic_key', '' );
+	if ( ! $key ) { wp_send_json_success( array() ); }
+
+	$ch = curl_init( 'https://api.anthropic.com/v1/skills?limit=100&source=custom' );
+	curl_setopt_array( $ch, array(
+		CURLOPT_HTTPHEADER => array(
+			'x-api-key: ' . $key,
+			'anthropic-version: 2023-06-01',
+			'anthropic-beta: skills-2025-10-02',
+		),
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_TIMEOUT => 15,
+	) );
+	$response = curl_exec( $ch );
+	curl_close( $ch );
+
+	$data = json_decode( $response, true );
+	$skills = array();
+	if ( isset( $data['data'] ) && is_array( $data['data'] ) ) {
+		foreach ( $data['data'] as $s ) {
+			$skills[] = array(
+				'id'    => isset( $s['id'] ) ? $s['id'] : '',
+				'title' => isset( $s['display_title'] ) ? $s['display_title'] : '',
+			);
+		}
+	}
+
+	set_transient( 'swell_child_chat_skills', $skills, HOUR_IN_SECONDS );
+	wp_send_json_success( $skills );
+} );
 
 /* --- チャットページ用アセット読み込み --- */
 
