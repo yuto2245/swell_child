@@ -327,6 +327,7 @@ function swell_child_chat_handler( WP_REST_Request $request ) {
 	$clean = [];
 	foreach ( $messages as $msg ) {
 		if ( ! isset( $msg['role'], $msg['content'] ) ) continue;
+		// contentはAI APIに送信するためsanitize_text_fieldを適用しない（改行・特殊文字を保持する必要がある）
 		$clean[] = [ 'role' => sanitize_text_field( $msg['role'] ), 'content' => $msg['content'] ];
 	}
 	if ( empty( $clean ) ) {
@@ -368,6 +369,7 @@ function swell_child_stream_anthropic( $model, $messages ) {
 	$body = [ 'model' => $model, 'messages' => $api_msgs, 'max_tokens' => 4096, 'stream' => true ];
 	if ( $system ) { $body['system'] = $system; }
 
+	$buffer = '';
 	$ch = curl_init( 'https://api.anthropic.com/v1/messages' );
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
@@ -375,8 +377,11 @@ function swell_child_stream_anthropic( $model, $messages ) {
 		CURLOPT_POSTFIELDS => wp_json_encode( $body ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
-		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) {
-			foreach ( explode( "\n", $chunk ) as $line ) {
+		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) {
+			$buffer .= $chunk;
+			while ( ( $pos = strpos( $buffer, "\n" ) ) !== false ) {
+				$line = substr( $buffer, 0, $pos );
+				$buffer = substr( $buffer, $pos + 1 );
 				$line = trim( $line );
 				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
 				$d = json_decode( substr( $line, 6 ), true );
@@ -399,6 +404,7 @@ function swell_child_stream_openai( $model, $messages ) {
 	$key = get_option( 'swell_child_openai_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'OpenAI API key not set.' ] ) . "\n\n"; flush(); return; }
 
+	$buffer = '';
 	$ch = curl_init( 'https://api.openai.com/v1/chat/completions' );
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
@@ -406,7 +412,7 @@ function swell_child_stream_openai( $model, $messages ) {
 		CURLOPT_POSTFIELDS => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
-		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) { swell_child_parse_openai_sse( $chunk ); return strlen( $chunk ); },
+		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) { swell_child_parse_openai_sse( $chunk, $buffer ); return strlen( $chunk ); },
 	] );
 	curl_exec( $ch );
 	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
@@ -426,6 +432,7 @@ function swell_child_stream_google( $model, $messages ) {
 	}
 
 	$url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode( $model ) . ':streamGenerateContent?key=' . urlencode( $key ) . '&alt=sse';
+	$buffer = '';
 	$ch = curl_init( $url );
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
@@ -433,8 +440,11 @@ function swell_child_stream_google( $model, $messages ) {
 		CURLOPT_POSTFIELDS => wp_json_encode( [ 'contents' => $contents ] ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
-		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) {
-			foreach ( explode( "\n", $chunk ) as $line ) {
+		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) {
+			$buffer .= $chunk;
+			while ( ( $pos = strpos( $buffer, "\n" ) ) !== false ) {
+				$line = substr( $buffer, 0, $pos );
+				$buffer = substr( $buffer, $pos + 1 );
 				$line = trim( $line );
 				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
 				$d = json_decode( substr( $line, 6 ), true );
@@ -456,6 +466,7 @@ function swell_child_stream_xai( $model, $messages ) {
 	$key = get_option( 'swell_child_xai_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'xAI API key not set.' ] ) . "\n\n"; flush(); return; }
 
+	$buffer = '';
 	$ch = curl_init( 'https://api.x.ai/v1/chat/completions' );
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
@@ -463,7 +474,7 @@ function swell_child_stream_xai( $model, $messages ) {
 		CURLOPT_POSTFIELDS => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
-		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) { swell_child_parse_openai_sse( $chunk ); return strlen( $chunk ); },
+		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) { swell_child_parse_openai_sse( $chunk, $buffer ); return strlen( $chunk ); },
 	] );
 	curl_exec( $ch );
 	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
@@ -472,8 +483,11 @@ function swell_child_stream_xai( $model, $messages ) {
 
 /* --- OpenAI形式SSE共通パーサ（OpenAI / xAI 共用） --- */
 
-function swell_child_parse_openai_sse( $chunk ) {
-	foreach ( explode( "\n", $chunk ) as $line ) {
+function swell_child_parse_openai_sse( $chunk, &$buffer ) {
+	$buffer .= $chunk;
+	while ( ( $pos = strpos( $buffer, "\n" ) ) !== false ) {
+		$line = substr( $buffer, 0, $pos );
+		$buffer = substr( $buffer, $pos + 1 );
 		$line = trim( $line );
 		if ( strpos( $line, 'data: ' ) !== 0 ) continue;
 		$json = substr( $line, 6 );
