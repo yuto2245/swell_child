@@ -325,6 +325,7 @@ function swell_child_ajax_chat_handler() {
 	$model    = sanitize_text_field( isset( $_POST['model'] ) ? $_POST['model'] : '' );
 	$type     = sanitize_text_field( isset( $_POST['type'] ) ? $_POST['type'] : '' );
 	$messages = json_decode( wp_unslash( isset( $_POST['messages'] ) ? $_POST['messages'] : '[]' ), true );
+	$web_search = ! empty( $_POST['web_search'] ) && $_POST['web_search'] === '1';
 
 	/* ホワイトリスト検証 */
 	$allowed_models = array_column( swell_child_chat_models(), 'id' );
@@ -354,10 +355,10 @@ function swell_child_ajax_chat_handler() {
 
 	try {
 		switch ( $type ) {
-			case 'anthropic': swell_child_stream_anthropic( $model, $clean ); break;
-			case 'openai':    swell_child_stream_openai( $model, $clean );    break;
-			case 'google':    swell_child_stream_google( $model, $clean );    break;
-			case 'xai':       swell_child_stream_xai( $model, $clean );      break;
+			case 'anthropic': swell_child_stream_anthropic( $model, $clean, $web_search ); break;
+			case 'openai':    swell_child_stream_openai( $model, $clean, $web_search );    break;
+			case 'google':    swell_child_stream_google( $model, $clean, $web_search );    break;
+			case 'xai':       swell_child_stream_xai( $model, $clean, $web_search );      break;
 		}
 	} catch ( Exception $e ) {
 		error_log( '[swell_chat] ' . $e->getMessage() );
@@ -371,7 +372,7 @@ function swell_child_ajax_chat_handler() {
 
 /* --- ストリーミング: Anthropic --- */
 
-function swell_child_stream_anthropic( $model, $messages ) {
+function swell_child_stream_anthropic( $model, $messages, $web_search = false ) {
 	$key = get_option( 'swell_child_anthropic_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'Anthropic API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -415,7 +416,7 @@ function swell_child_stream_anthropic( $model, $messages ) {
 
 /* --- ストリーミング: OpenAI --- */
 
-function swell_child_stream_openai( $model, $messages ) {
+function swell_child_stream_openai( $model, $messages, $web_search = false ) {
 	$key = get_option( 'swell_child_openai_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'OpenAI API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -424,7 +425,7 @@ function swell_child_stream_openai( $model, $messages ) {
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
 		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'Authorization: Bearer ' . $key ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
+		CURLOPT_POSTFIELDS => wp_json_encode( swell_child_build_openai_body( $model, $messages, $web_search ) ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
 		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) { swell_child_parse_openai_sse( $chunk, $buffer ); return strlen( $chunk ); },
@@ -434,9 +435,17 @@ function swell_child_stream_openai( $model, $messages ) {
 	curl_close( $ch );
 }
 
+function swell_child_build_openai_body( $model, $messages, $web_search ) {
+	$body = array( 'model' => $model, 'messages' => $messages, 'stream' => true );
+	if ( $web_search ) {
+		$body['tools'] = array( array( 'type' => 'web_search_preview' ) );
+	}
+	return $body;
+}
+
 /* --- ストリーミング: Gemini --- */
 
-function swell_child_stream_google( $model, $messages ) {
+function swell_child_stream_google( $model, $messages, $web_search = false ) {
 	$key = get_option( 'swell_child_google_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'Google API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -452,7 +461,7 @@ function swell_child_stream_google( $model, $messages ) {
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
 		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json' ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'contents' => $contents ] ),
+		CURLOPT_POSTFIELDS => wp_json_encode( swell_child_build_google_body( $contents, $web_search ) ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
 		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) {
@@ -464,20 +473,28 @@ function swell_child_stream_google( $model, $messages ) {
 				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
 				$d = json_decode( substr( $line, 6 ), true );
 				if ( ! $d ) continue;
-				$t = $d['candidates'][0]['content']['parts'][0]['text'] ?? '';
-				if ( $t !== '' ) { echo "data: " . wp_json_encode( [ 'token' => $t ] ) . "\n\n"; flush(); }
+				$t = isset( $d['candidates'][0]['content']['parts'][0]['text'] ) ? $d['candidates'][0]['content']['parts'][0]['text'] : '';
+				if ( $t !== '' ) { echo "data: " . wp_json_encode( array( 'token' => $t ) ) . "\n\n"; flush(); }
 			}
 			return strlen( $chunk );
 		},
 	] );
 	curl_exec( $ch );
-	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
+	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( array( 'error' => curl_error( $ch ) ) ) . "\n\n"; flush(); }
 	curl_close( $ch );
+}
+
+function swell_child_build_google_body( $contents, $web_search ) {
+	$body = array( 'contents' => $contents );
+	if ( $web_search ) {
+		$body['tools'] = array( array( 'google_search' => new stdClass() ) );
+	}
+	return $body;
 }
 
 /* --- ストリーミング: xAI (Grok) — OpenAI互換 --- */
 
-function swell_child_stream_xai( $model, $messages ) {
+function swell_child_stream_xai( $model, $messages, $web_search = false ) {
 	$key = get_option( 'swell_child_xai_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'xAI API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -486,14 +503,22 @@ function swell_child_stream_xai( $model, $messages ) {
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
 		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'Authorization: Bearer ' . $key ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
+		CURLOPT_POSTFIELDS => wp_json_encode( swell_child_build_xai_body( $model, $messages, $web_search ) ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
 		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) { swell_child_parse_openai_sse( $chunk, $buffer ); return strlen( $chunk ); },
 	] );
 	curl_exec( $ch );
-	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
+	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( array( 'error' => curl_error( $ch ) ) ) . "\n\n"; flush(); }
 	curl_close( $ch );
+}
+
+function swell_child_build_xai_body( $model, $messages, $web_search ) {
+	$body = array( 'model' => $model, 'messages' => $messages, 'stream' => true );
+	if ( $web_search ) {
+		$body['search_parameters'] = array( 'mode' => 'auto' );
+	}
+	return $body;
 }
 
 /* --- OpenAI形式SSE共通パーサ（OpenAI / xAI 共用） --- */
