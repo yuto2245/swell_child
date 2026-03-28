@@ -29,7 +29,6 @@
     /* html admin-bar余白をリセット */
     document.documentElement.style.marginTop = '0';
 
-
     if (chatConfig.models && chatConfig.models.length > 0) {
       chatConfig.models.forEach(function (m) {
         var item = document.createElement('button');
@@ -56,6 +55,8 @@
     newChatBtn.addEventListener('click', handleNewChat);
 
     /* プラスメニュー */
+    var plusMenu = document.getElementById('chat-plus-menu');
+    var plusTrigger = document.getElementById('chat-plus-trigger');
     if (plusTrigger && plusMenu) {
       plusTrigger.addEventListener('click', function () { plusMenu.classList.toggle('is-open'); });
       document.addEventListener('click', function (e) { if (!plusMenu.contains(e.target)) plusMenu.classList.remove('is-open'); });
@@ -68,7 +69,7 @@
     currentModelType = m.type;
     iconEl.src = chatConfig.iconBaseUrl + m.icon;
     labelEl.textContent = m.label;
-    composerModelEl.textContent = m.label;
+    if (composerModelEl) composerModelEl.textContent = m.label;
   }
 
   function closeDropdown() { dropdown.classList.remove('is-open'); }
@@ -106,10 +107,16 @@
     var fullText = '';
 
     try {
-      var response = await fetch(chatConfig.restUrl, {
+      var formData = new FormData();
+      formData.append('action', 'swell_chat_stream');
+      formData.append('_wpnonce', chatConfig.nonce);
+      formData.append('model', currentModel);
+      formData.append('type', currentModelType);
+      formData.append('messages', JSON.stringify(conversationHistory));
+
+      var response = await fetch(chatConfig.ajaxUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': chatConfig.nonce },
-        body: JSON.stringify({ model: currentModel, type: currentModelType, messages: conversationHistory })
+        body: formData
       });
 
       if (!response.ok) throw new Error('HTTP ' + response.status);

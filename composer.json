@@ -1,0 +1,8 @@
+{
+    "require": {
+        "anthropic-ai/sdk": "^0.8.0",
+        "openai-php/client": "^0.19.1",
+        "google-gemini-php/client": "^2.7",
+        "grok-php/client": "^1.3"
+    }
+}

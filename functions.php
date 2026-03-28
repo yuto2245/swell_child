@@ -2,6 +2,11 @@
 
 /* 子テーマのfunctions.phpは、親テーマのfunctions.phpより先に読み込まれることに注意してください。 */
 
+/* SDK autoload */
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+	require_once __DIR__ . '/vendor/autoload.php';
+}
+
 
 /**
  * 親テーマのfunctions.phpのあとで読み込みたいコードはこの中に。
@@ -305,198 +310,195 @@ function swell_child_chat_settings_page() {
 	echo '</form></div>';
 }
 
-/* --- REST API エンドポイント --- */
+/* --- AJAX SSEエンドポイント（SDK使用） --- */
 
-add_action( 'rest_api_init', function () {
-	register_rest_route( 'swell-child/v1', '/chat', [
-		'methods'             => 'POST',
-		'callback'            => 'swell_child_chat_handler',
-		'permission_callback' => function () { return current_user_can( 'manage_options' ); },
-	] );
-} );
+add_action( 'wp_ajax_swell_chat_stream', function () {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		http_response_code( 403 );
+		exit;
+	}
+	check_ajax_referer( 'swell_chat_nonce', '_wpnonce' );
 
-function swell_child_chat_handler( WP_REST_Request $request ) {
-	$model    = sanitize_text_field( $request->get_param( 'model' ) );
-	$type     = sanitize_text_field( $request->get_param( 'type' ) );
-	$messages = $request->get_param( 'messages' );
+	$model    = sanitize_text_field( $_POST['model'] ?? '' );
+	$type     = sanitize_text_field( $_POST['type'] ?? '' );
+	$messages = json_decode( wp_unslash( $_POST['messages'] ?? '[]' ), true );
 
-	if ( empty( $model ) || empty( $type ) || ! is_array( $messages ) ) {
-		return new WP_Error( 'invalid_params', 'Missing required parameters.', [ 'status' => 400 ] );
+	// モデル・タイプのホワイトリスト検証
+	$allowed_models = array_column( swell_child_chat_models(), 'id' );
+	$allowed_types  = [ 'anthropic', 'openai', 'google', 'xai' ];
+	if ( ! in_array( $model, $allowed_models, true ) || ! in_array( $type, $allowed_types, true ) || ! is_array( $messages ) ) {
+		header( 'Content-Type: text/event-stream; charset=utf-8' );
+		echo "data: " . wp_json_encode( [ 'error' => 'Invalid parameters.' ] ) . "\n\n";
+		exit;
 	}
 
+	// メッセージサニタイズ（roleはホワイトリスト、contentは制御文字除去のみ）
+	$allowed_roles = [ 'system', 'user', 'assistant' ];
 	$clean = [];
 	foreach ( $messages as $msg ) {
 		if ( ! isset( $msg['role'], $msg['content'] ) ) continue;
-		// contentはAI APIに送信するためsanitize_text_fieldを適用しない（改行・特殊文字を保持する必要がある）
-		$clean[] = [ 'role' => sanitize_text_field( $msg['role'] ), 'content' => $msg['content'] ];
-	}
-	if ( empty( $clean ) ) {
-		return new WP_Error( 'invalid_messages', 'No valid messages.', [ 'status' => 400 ] );
+		$role = sanitize_text_field( $msg['role'] );
+		if ( ! in_array( $role, $allowed_roles, true ) ) continue;
+		$content = wp_check_invalid_utf8( $msg['content'] );
+		$content = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $content );
+		$clean[] = [ 'role' => $role, 'content' => $content ];
 	}
 
-	header( 'Content-Type: text/event-stream' );
+	// SSEヘッダー + バッファ無効化
+	header( 'Content-Type: text/event-stream; charset=utf-8' );
 	header( 'Cache-Control: no-cache' );
 	header( 'X-Accel-Buffering: no' );
+	@ini_set( 'zlib.output_compression', 0 );
 	while ( ob_get_level() ) { ob_end_flush(); }
 
-	switch ( $type ) {
-		case 'anthropic': swell_child_stream_anthropic( $model, $clean ); break;
-		case 'openai':    swell_child_stream_openai( $model, $clean );    break;
-		case 'google':    swell_child_stream_google( $model, $clean );    break;
-		case 'xai':       swell_child_stream_xai( $model, $clean );      break;
-		default:
-			echo "data: " . wp_json_encode( [ 'error' => 'Unknown provider.' ] ) . "\n\n";
-			flush();
+	try {
+		switch ( $type ) {
+			case 'anthropic': swell_child_stream_anthropic( $model, $clean ); break;
+			case 'openai':    swell_child_stream_openai( $model, $clean );    break;
+			case 'google':    swell_child_stream_google( $model, $clean );    break;
+			case 'xai':       swell_child_stream_xai( $model, $clean );      break;
+			default:
+				echo "data: " . wp_json_encode( [ 'error' => 'Unknown provider.' ] ) . "\n\n";
+		}
+	} catch ( \Throwable $e ) {
+		error_log( '[swell_chat] ' . $e->getMessage() );
+		swell_child_sse_error( 'An error occurred. Please check server logs.' );
 	}
 
 	echo "data: [DONE]\n\n";
 	flush();
 	exit;
+} );
+
+/** SSEトークン出力ヘルパー */
+function swell_child_sse_token( $token ) {
+	if ( $token === '' || $token === null ) return;
+	echo "data: " . wp_json_encode( [ 'token' => $token ] ) . "\n\n";
+	flush();
 }
 
-/* --- ストリーミング: Anthropic --- */
+function swell_child_sse_error( $msg ) {
+	echo "data: " . wp_json_encode( [ 'error' => $msg ] ) . "\n\n";
+	flush();
+}
+
+/* --- ストリーミング: Anthropic (SDK) --- */
 
 function swell_child_stream_anthropic( $model, $messages ) {
 	$key = get_option( 'swell_child_anthropic_key', '' );
-	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'Anthropic API key not set.' ] ) . "\n\n"; flush(); return; }
+	if ( ! $key ) { swell_child_sse_error( 'Anthropic API key not set.' ); return; }
 
 	$system = '';
 	$api_msgs = [];
 	foreach ( $messages as $m ) {
-		if ( $m['role'] === 'system' ) { $system = $m['content']; } else { $api_msgs[] = $m; }
+		if ( $m['role'] === 'system' ) { $system = $m['content']; }
+		else { $api_msgs[] = $m; }
 	}
 
-	$body = [ 'model' => $model, 'messages' => $api_msgs, 'max_tokens' => 4096, 'stream' => true ];
-	if ( $system ) { $body['system'] = $system; }
+	$client = \Anthropic::client( $key );
+	$params = [
+		'model'      => $model,
+		'messages'   => $api_msgs,
+		'max_tokens' => 4096,
+	];
+	if ( $system ) { $params['system'] = $system; }
 
-	$buffer = '';
-	$ch = curl_init( 'https://api.anthropic.com/v1/messages' );
-	curl_setopt_array( $ch, [
-		CURLOPT_POST => true,
-		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'x-api-key: ' . $key, 'anthropic-version: 2023-06-01' ],
-		CURLOPT_POSTFIELDS => wp_json_encode( $body ),
-		CURLOPT_RETURNTRANSFER => false,
-		CURLOPT_TIMEOUT => 120,
-		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) {
-			$buffer .= $chunk;
-			while ( ( $pos = strpos( $buffer, "\n" ) ) !== false ) {
-				$line = substr( $buffer, 0, $pos );
-				$buffer = substr( $buffer, $pos + 1 );
-				$line = trim( $line );
-				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
-				$d = json_decode( substr( $line, 6 ), true );
-				if ( ! $d ) continue;
-				if ( ( $d['type'] ?? '' ) === 'content_block_delta' && ( $d['delta']['text'] ?? '' ) !== '' ) {
-					echo "data: " . wp_json_encode( [ 'token' => $d['delta']['text'] ] ) . "\n\n"; flush();
-				}
-			}
-			return strlen( $chunk );
-		},
-	] );
-	curl_exec( $ch );
-	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
-	curl_close( $ch );
+	$stream = $client->messages()->createStreamed( $params );
+	foreach ( $stream as $response ) {
+		if ( isset( $response->type ) && $response->type === 'content_block_delta' ) {
+			swell_child_sse_token( $response->delta->text ?? '' );
+		}
+	}
 }
 
-/* --- ストリーミング: OpenAI --- */
+/* --- ストリーミング: OpenAI (SDK) --- */
 
 function swell_child_stream_openai( $model, $messages ) {
 	$key = get_option( 'swell_child_openai_key', '' );
-	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'OpenAI API key not set.' ] ) . "\n\n"; flush(); return; }
+	if ( ! $key ) { swell_child_sse_error( 'OpenAI API key not set.' ); return; }
 
-	$buffer = '';
-	$ch = curl_init( 'https://api.openai.com/v1/chat/completions' );
-	curl_setopt_array( $ch, [
-		CURLOPT_POST => true,
-		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'Authorization: Bearer ' . $key ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
-		CURLOPT_RETURNTRANSFER => false,
-		CURLOPT_TIMEOUT => 120,
-		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) { swell_child_parse_openai_sse( $chunk, $buffer ); return strlen( $chunk ); },
+	$client = \OpenAI::client( $key );
+	$stream = $client->chat()->createStreamed( [
+		'model'    => $model,
+		'messages' => $messages,
 	] );
-	curl_exec( $ch );
-	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
-	curl_close( $ch );
+
+	foreach ( $stream as $response ) {
+		$content = $response->choices[0]->delta->content ?? '';
+		swell_child_sse_token( $content );
+	}
 }
 
-/* --- ストリーミング: Gemini --- */
+/* --- ストリーミング: Gemini (SDK) --- */
 
 function swell_child_stream_google( $model, $messages ) {
 	$key = get_option( 'swell_child_google_key', '' );
-	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'Google API key not set.' ] ) . "\n\n"; flush(); return; }
+	if ( ! $key ) { swell_child_sse_error( 'Google API key not set.' ); return; }
 
+	$client = \Gemini::client( $key );
+
+	// メッセージをGemini Content形式に変換
 	$contents = [];
+	$systemInstruction = null;
 	foreach ( $messages as $m ) {
-		$role = $m['role'] === 'assistant' ? 'model' : ( $m['role'] === 'system' ? 'user' : $m['role'] );
-		$contents[] = [ 'role' => $role, 'parts' => [ [ 'text' => $m['content'] ] ] ];
+		if ( $m['role'] === 'system' ) {
+			$systemInstruction = \Gemini\Data\Content::parse( $m['content'], \Gemini\Enums\Role::USER );
+			continue;
+		}
+		$role = $m['role'] === 'assistant' ? \Gemini\Enums\Role::MODEL : \Gemini\Enums\Role::USER;
+		$contents[] = \Gemini\Data\Content::parse( $m['content'], $role );
 	}
 
-	$url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode( $model ) . ':streamGenerateContent?key=' . urlencode( $key ) . '&alt=sse';
-	$buffer = '';
-	$ch = curl_init( $url );
-	curl_setopt_array( $ch, [
-		CURLOPT_POST => true,
-		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json' ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'contents' => $contents ] ),
-		CURLOPT_RETURNTRANSFER => false,
-		CURLOPT_TIMEOUT => 120,
-		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) {
-			$buffer .= $chunk;
-			while ( ( $pos = strpos( $buffer, "\n" ) ) !== false ) {
-				$line = substr( $buffer, 0, $pos );
-				$buffer = substr( $buffer, $pos + 1 );
-				$line = trim( $line );
-				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
-				$d = json_decode( substr( $line, 6 ), true );
-				if ( ! $d ) continue;
-				$t = $d['candidates'][0]['content']['parts'][0]['text'] ?? '';
-				if ( $t !== '' ) { echo "data: " . wp_json_encode( [ 'token' => $t ] ) . "\n\n"; flush(); }
-			}
-			return strlen( $chunk );
-		},
-	] );
-	curl_exec( $ch );
-	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
-	curl_close( $ch );
+	$generativeModel = $client->generativeModel( $model );
+	if ( $systemInstruction ) {
+		$generativeModel = $generativeModel->withSystemInstruction( $systemInstruction );
+	}
+
+	$stream = $generativeModel->streamGenerateContent( ...$contents );
+	foreach ( $stream as $response ) {
+		try {
+			swell_child_sse_token( $response->text() );
+		} catch ( \Throwable $e ) {
+			// text以外のパート（画像等）はスキップ
+			continue;
+		}
+	}
 }
 
-/* --- ストリーミング: xAI (Grok) — OpenAI互換 --- */
+/* --- ストリーミング: xAI Grok (cURL — SDKがストリーミング非対応のため) --- */
 
 function swell_child_stream_xai( $model, $messages ) {
 	$key = get_option( 'swell_child_xai_key', '' );
-	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'xAI API key not set.' ] ) . "\n\n"; flush(); return; }
+	if ( ! $key ) { swell_child_sse_error( 'xAI API key not set.' ); return; }
 
 	$buffer = '';
 	$ch = curl_init( 'https://api.x.ai/v1/chat/completions' );
 	curl_setopt_array( $ch, [
-		CURLOPT_POST => true,
-		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'Authorization: Bearer ' . $key ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
+		CURLOPT_POST           => true,
+		CURLOPT_HTTPHEADER     => [ 'Content-Type: application/json', 'Authorization: Bearer ' . $key ],
+		CURLOPT_POSTFIELDS     => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
 		CURLOPT_RETURNTRANSFER => false,
-		CURLOPT_TIMEOUT => 120,
-		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) { swell_child_parse_openai_sse( $chunk, $buffer ); return strlen( $chunk ); },
+		CURLOPT_TIMEOUT        => 120,
+		CURLOPT_WRITEFUNCTION  => function ( $ch, $chunk ) use ( &$buffer ) {
+			$buffer .= $chunk;
+			while ( ( $pos = strpos( $buffer, "\n" ) ) !== false ) {
+				$line   = substr( $buffer, 0, $pos );
+				$buffer = substr( $buffer, $pos + 1 );
+				$line   = trim( $line );
+				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
+				$json = substr( $line, 6 );
+				if ( $json === '[DONE]' ) return strlen( $chunk );
+				$d = json_decode( $json, true );
+				if ( ! $d ) continue;
+				$t = $d['choices'][0]['delta']['content'] ?? '';
+				swell_child_sse_token( $t );
+			}
+			return strlen( $chunk );
+		},
 	] );
 	curl_exec( $ch );
-	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
+	if ( curl_errno( $ch ) ) { swell_child_sse_error( curl_error( $ch ) ); }
 	curl_close( $ch );
-}
-
-/* --- OpenAI形式SSE共通パーサ（OpenAI / xAI 共用） --- */
-
-function swell_child_parse_openai_sse( $chunk, &$buffer ) {
-	$buffer .= $chunk;
-	while ( ( $pos = strpos( $buffer, "\n" ) ) !== false ) {
-		$line = substr( $buffer, 0, $pos );
-		$buffer = substr( $buffer, $pos + 1 );
-		$line = trim( $line );
-		if ( strpos( $line, 'data: ' ) !== 0 ) continue;
-		$json = substr( $line, 6 );
-		if ( $json === '[DONE]' ) return;
-		$d = json_decode( $json, true );
-		if ( ! $d ) continue;
-		$t = $d['choices'][0]['delta']['content'] ?? '';
-		if ( $t !== '' ) { echo "data: " . wp_json_encode( [ 'token' => $t ] ) . "\n\n"; flush(); }
-	}
 }
 
 /* --- チャットページ用アセット読み込み --- */
@@ -508,8 +510,8 @@ add_action( 'wp_enqueue_scripts', function () {
 	$ts   = file_exists( $path ) ? date( 'Ymdgis', filemtime( $path ) ) : '1';
 	wp_enqueue_script( 'chat-js', get_stylesheet_directory_uri() . '/js/chat.js', [], $ts, true );
 	wp_localize_script( 'chat-js', 'chatConfig', [
-		'restUrl'     => rest_url( 'swell-child/v1/chat' ),
-		'nonce'       => wp_create_nonce( 'wp_rest' ),
+		'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+		'nonce'       => wp_create_nonce( 'swell_chat_nonce' ),
 		'models'      => swell_child_chat_models(),
 		'iconBaseUrl' => get_stylesheet_directory_uri() . '/img/chat/',
 	] );
