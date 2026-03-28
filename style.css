@@ -1845,7 +1845,7 @@ body {
 
 /* --- メッセージ --- */
 .chat-msg {
-  max-width: 768px;
+  max-width: 680px;
   margin: 0 auto;
   padding: 24px 0;
 }
@@ -1955,23 +1955,22 @@ body {
   50% { opacity: 0; }
 }
 
-/* --- 入力エリア --- */
+/* --- 入力エリア（Claude.ai風2段構造） --- */
 .chat-composer {
   flex-shrink: 0;
   padding: 0 var(--space-sm) 24px;
 }
 
 .chat-composer__inner {
-  max-width: 768px;
+  max-width: 680px;
   margin: 0 auto;
   background: var(--chat-composer-bg);
-  border-radius: 1rem;
+  border-radius: 16px;
   box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.035);
   border: 1px solid var(--chat-border);
   display: flex;
-  align-items: flex-end;
-  padding: 12px 12px 12px 16px;
-  gap: 8px;
+  flex-direction: column;
+  padding: 12px 16px;
   transition: border-color 0.15s ease;
 }
 
@@ -1980,7 +1979,7 @@ body {
 }
 
 .chat-composer__textarea {
-  flex: 1;
+  width: 100%;
   border: none;
   outline: none;
   resize: none;
@@ -1992,53 +1991,90 @@ body {
   padding: 4px 0;
   min-height: 24px;
   max-height: 120px;
+  box-sizing: border-box;
 }
 
 .chat-composer__textarea::placeholder { color: var(--chat-text-muted); }
 .chat-composer__textarea:disabled { opacity: 0.5; }
 
+/* コントロールバー（下段） */
+.chat-composer__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  width: 100%;
+}
+
+.chat-composer__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-composer__model-name {
+  font-family: var(--font-main);
+  font-size: 12px;
+  color: var(--chat-text-muted);
+  font-weight: 500;
+}
+
 /* 送信ボタン */
 .chat-composer__send {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: none;
-  background: var(--chat-accent);
+  background: var(--chat-text);
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.15s ease, opacity 0.15s ease;
+  transition: opacity 0.15s ease;
   padding: 0;
 }
 
-.chat-composer__send:hover { background: var(--chat-accent-hover); }
-.chat-composer__send:disabled { opacity: 0.5; cursor: not-allowed; }
+.chat-composer__send:hover { opacity: 0.8; }
+.chat-composer__send:disabled { opacity: 0.3; cursor: not-allowed; }
 
-.chat-composer__send::before {
-  content: '';
-  display: block;
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid #fff;
-  border-top: 2px solid #fff;
-  transform: rotate(-45deg) translate(-1px, 1px);
+.chat-composer__send svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
+.chat-composer__send.is-loading svg { display: none; }
+
 .chat-composer__send.is-loading::before {
-  border: none;
-  width: 16px;
-  height: 16px;
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   border-top: 2px solid #fff;
   border-right: 2px solid transparent;
-  transform: none;
   animation: chat-spin 0.6s linear infinite;
 }
 
 @keyframes chat-spin { to { transform: rotate(360deg); } }
+
+/* --- 初期状態（空チャット）--- */
+body.chat-page.is-empty .chat-messages { display: none; }
+body.chat-page.is-empty .chat-composer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.chat-page.is-empty .chat-composer__inner {
+  width: 100%;
+}
 
 /* --- レスポンシブ --- */
 @media (max-width: 768px) {
@@ -2047,7 +2083,7 @@ body {
   .chat-msg { padding: 16px 0; }
   .chat-msg__content { font-size: 15px; }
   .chat-composer { padding: 0 12px 16px; }
-  .chat-composer__inner { padding: 10px 10px 10px 14px; }
+  .chat-composer__inner { padding: 10px 14px; }
   .chat-code-block { padding: 12px 14px; font-size: 13px; border-radius: 6px; }
 }
 
