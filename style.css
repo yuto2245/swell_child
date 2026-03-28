@@ -1736,8 +1736,29 @@ body {
   height: 100vh;
   background: var(--chat-bg);
   overflow: hidden;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+/* SWELL/WP のデフォルトスタイルをリセット */
+body.chat-page,
+body.chat-page.admin-bar {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden;
+}
+
+body.chat-page #wpadminbar {
+  display: none;
+}
+
+body.chat-page .l-header,
+body.chat-page .l-footer,
+body.chat-page .l-fixHeader,
+body.chat-page .p-fixBtnWrap {
+  display: none !important;
 }
 
 /* --- ヘッダー --- */
