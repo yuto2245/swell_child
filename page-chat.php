@@ -18,7 +18,7 @@ if ( ! current_user_can( 'manage_options' ) ) {
 <meta name="robots" content="noindex, nofollow">
 <?php wp_head(); ?>
 </head>
-<body <?php body_class( 'chat-page' ); ?>>
+<body <?php body_class( 'chat-page is-empty' ); ?>>
 
 <div class="chat-header">
 	<div id="chat-model-dropdown" class="chat-dropdown">
@@ -36,8 +36,16 @@ if ( ! current_user_can( 'manage_options' ) ) {
 
 <div class="chat-composer">
 	<div class="chat-composer__inner">
-		<textarea id="chat-textarea" class="chat-composer__textarea" placeholder="Send a message..." rows="1" aria-label="Chat message input"></textarea>
-		<button id="chat-send" class="chat-composer__send" type="button" aria-label="Send message"></button>
+		<textarea id="chat-textarea" class="chat-composer__textarea" placeholder="本日はどのようなお手伝いをさせていただけますか？" rows="1" aria-label="Chat message input"></textarea>
+		<div class="chat-composer__controls">
+			<div class="chat-composer__left"></div>
+			<div class="chat-composer__right">
+				<span id="chat-composer-model" class="chat-composer__model-name"></span>
+				<button id="chat-send" class="chat-composer__send" type="button" aria-label="Send message">
+					<svg width="14" height="14" viewBox="0 0 24 24"><polyline points="6 15 12 9 18 15"/></svg>
+				</button>
+			</div>
+		</div>
 	</div>
 </div>
 
