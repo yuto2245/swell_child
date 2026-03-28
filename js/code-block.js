@@ -1,7 +1,7 @@
 /**
  * Anthropic風コードブロック
  * - WordPress標準コードブロックの自動ラップ（フローティング言語ラベル + コピーアイコン）
- * - 行番号の自動付与
+ * - 行番号の自動付与（DOMツリー走査ベース — Prismトークンを壊さない）
  * - コードグループ（タブ切り替え）
  * - Clipboard API によるコピー機能
  */
@@ -100,17 +100,101 @@
   }
 
   /**
-   * コードを行ごとにspanでラップ（行番号用）
+   * DOMツリーを再帰走査し、テキストノード内の改行で行を分割する。
+   * Prismが生成したトークンspan（<span class="token keyword">）が複数行にまたがる場合でも
+   * 正しく分割される。
    */
   function wrapLines(codeEl) {
-    /* Prism.jsのハイライト済みHTML内の行をラップする */
-    var html = codeEl.innerHTML;
-    /* 末尾の改行を除去して空行番号を防ぐ */
-    html = html.replace(/\n$/, '');
-    var lines = html.split('\n');
-    codeEl.innerHTML = lines.map(function (line) {
-      return '<span class="c-codeBlock__line">' + (line || ' ') + '</span>';
-    }).join('\n');
+    var lines = [];
+    var currentLine = document.createDocumentFragment();
+
+    function commitLine() {
+      lines.push(currentLine);
+      currentLine = document.createDocumentFragment();
+    }
+
+    function copyAttributes(el) {
+      var attrs = {};
+      for (var i = 0; i < el.attributes.length; i++) {
+        attrs[el.attributes[i].name] = el.attributes[i].value;
+      }
+      return attrs;
+    }
+
+    function applyAttributes(el, attrs) {
+      for (var key in attrs) {
+        if (attrs.hasOwnProperty(key)) {
+          el.setAttribute(key, attrs[key]);
+        }
+      }
+    }
+
+    function appendWrapped(textNode, wrapperStack) {
+      var wrapped = textNode;
+      for (var i = wrapperStack.length - 1; i >= 0; i--) {
+        var info = wrapperStack[i];
+        var el = document.createElement(info.tagName);
+        applyAttributes(el, info.attributes);
+        el.appendChild(wrapped);
+        wrapped = el;
+      }
+      currentLine.appendChild(wrapped);
+    }
+
+    function processNode(node, wrapperStack) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        var parts = node.textContent.split('\n');
+        for (var i = 0; i < parts.length; i++) {
+          if (i > 0) commitLine();
+          if (parts[i].length > 0) {
+            appendWrapped(document.createTextNode(parts[i]), wrapperStack);
+          }
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        var newStack = wrapperStack.concat([{
+          tagName: node.tagName,
+          attributes: copyAttributes(node)
+        }]);
+        var child = node.firstChild;
+        while (child) {
+          var next = child.nextSibling;
+          processNode(child, newStack);
+          child = next;
+        }
+      }
+    }
+
+    /* 子ノードを走査 */
+    var child = codeEl.firstChild;
+    while (child) {
+      var next = child.nextSibling;
+      processNode(child, []);
+      child = next;
+    }
+    commitLine();
+
+    /* 末尾の空行を除去 */
+    while (lines.length > 1 && lines[lines.length - 1].childNodes.length === 0) {
+      lines.pop();
+    }
+
+    /* codeEl をクリアして行spanを挿入 */
+    codeEl.textContent = '';
+    lines.forEach(function (lineFragment, idx) {
+      var lineSpan = document.createElement('span');
+      lineSpan.className = 'c-codeBlock__line';
+
+      if (lineFragment.childNodes.length === 0) {
+        lineSpan.appendChild(document.createTextNode(' '));
+      } else {
+        lineSpan.appendChild(lineFragment);
+      }
+
+      if (idx > 0) {
+        codeEl.appendChild(document.createTextNode('\n'));
+      }
+      codeEl.appendChild(lineSpan);
+    });
   }
 
   /* ========== WordPress標準コードブロックをラップ ========== */
@@ -127,8 +211,7 @@
       var lang = detectLang(codeEl);
       var label = langLabel(lang);
 
-      /* 行番号を付与 */
-      wrapLines(codeEl);
+      /* ※ wrapLines() はここでは呼ばない（Prismハイライト後に実行） */
 
       /* ラッパー作成 */
       var wrapper = document.createElement('div');
@@ -182,11 +265,7 @@
 
       if (tabs.length === 0 || panels.length === 0) return;
 
-      /* パネル内のコードに行番号を付与 */
-      panels.forEach(function (panel) {
-        var code = panel.querySelector('code');
-        if (code) wrapLines(code);
-      });
+      /* ※ wrapLines() はここでは呼ばない（Prismハイライト後に実行） */
 
       /* 初期表示 */
       tabs[0].setAttribute('aria-selected', 'true');
@@ -230,15 +309,27 @@
     });
   }
 
+  /* ========== 全コードブロックに行番号を適用 ========== */
+  function applyLineWrapping() {
+    var codes = document.querySelectorAll('.c-codeBlock__body code, .c-codeGroup__panel code');
+    codes.forEach(function (codeEl) {
+      wrapLines(codeEl);
+    });
+  }
+
   /* ========== 初期化 ========== */
   function init() {
-    /* 全言語コンポーネントロード後にハイライトを再実行 */
+    /* ステップ1: DOMラッパー構築（wrapLines なし） */
+    wrapWpCodeBlocks();
+    initCodeGroups();
+
+    /* ステップ2: Prismによるシンタックスハイライト */
     if (window.Prism) {
       Prism.highlightAll();
     }
 
-    wrapWpCodeBlocks();
-    initCodeGroups();
+    /* ステップ3: トークン化済みDOMに対して行番号を付与 */
+    applyLineWrapping();
   }
 
   if (document.readyState === 'loading') {
