@@ -107,3 +107,45 @@ add_action('wp_enqueue_scripts', function() {
 	}
 
 }, 11);
+
+/**
+ * コードブロック：エディタ用スクリプト（言語セレクタ追加）
+ */
+add_action('enqueue_block_editor_assets', function() {
+	$ts = date( 'Ymdgis', filemtime( get_stylesheet_directory() . '/js/code-block-editor.js' ) );
+	wp_enqueue_script(
+		'code-block-editor-js',
+		get_stylesheet_directory_uri() . '/js/code-block-editor.js',
+		['wp-blocks', 'wp-element', 'wp-compose', 'wp-hooks', 'wp-block-editor', 'wp-components'],
+		$ts,
+		true
+	);
+});
+
+/**
+ * コードブロック：フロントエンド出力時に <code> へ言語クラスを注入
+ * エディタで選択した codeLanguage 属性を language-xxx クラスとして付与する
+ */
+add_filter('render_block_core/code', function( $block_content, $block ) {
+	$lang = $block['attrs']['codeLanguage'] ?? '';
+	if ( empty( $lang ) ) {
+		return $block_content;
+	}
+
+	$lang_class = 'language-' . esc_attr( $lang );
+
+	/* <code> タグにクラスを追加 */
+	if ( strpos( $block_content, '<code ' ) !== false ) {
+		/* 既にclass属性がある場合 */
+		$block_content = preg_replace(
+			'/(<code\s+[^>]*class=")/i',
+			'$1' . $lang_class . ' ',
+			$block_content
+		);
+	} elseif ( strpos( $block_content, '<code>' ) !== false ) {
+		/* class属性がない場合 */
+		$block_content = str_replace( '<code>', '<code class="' . $lang_class . '">', $block_content );
+	}
+
+	return $block_content;
+}, 10, 2);
