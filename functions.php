@@ -149,3 +149,108 @@ add_filter('render_block_core/code', function( $block_content, $block ) {
 
 	return $block_content;
 }, 10, 2);
+
+/**
+ * スキルページ：GitHub API からスキル一覧を取得（1時間キャッシュ）
+ */
+function swell_child_fetch_skills() {
+	$cache_key  = 'swell_child_skills';
+	$fallback_key = $cache_key . '_fallback';
+
+	/* キャッシュ確認 */
+	$cached = get_transient( $cache_key );
+	if ( false !== $cached ) {
+		return $cached;
+	}
+
+	$repo = 'yuto2245/claude-skills';
+	$api  = "https://api.github.com/repos/{$repo}/contents/skills";
+	$headers = [
+		'Accept'     => 'application/vnd.github.v3+json',
+		'User-Agent' => 'SWELL-Child-Theme',
+	];
+
+	/* フォルダ一覧取得 */
+	$response = wp_remote_get( $api, [ 'headers' => $headers, 'timeout' => 10 ] );
+	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		/* APIエラー時はフォールバックキャッシュを返す */
+		$fallback = get_option( $fallback_key, [] );
+		return $fallback;
+	}
+
+	$dirs = json_decode( wp_remote_retrieve_body( $response ), true );
+	if ( ! is_array( $dirs ) ) {
+		return get_option( $fallback_key, [] );
+	}
+
+	$skills = [];
+	foreach ( $dirs as $dir ) {
+		if ( 'dir' !== ( $dir['type'] ?? '' ) ) continue;
+
+		$name = $dir['name'];
+		$md_url = "https://raw.githubusercontent.com/{$repo}/main/skills/{$name}/SKILL.md";
+
+		$md_response = wp_remote_get( $md_url, [ 'headers' => $headers, 'timeout' => 10 ] );
+		if ( is_wp_error( $md_response ) || 200 !== wp_remote_retrieve_response_code( $md_response ) ) {
+			$skills[] = [ 'name' => $name, 'description' => '' ];
+			continue;
+		}
+
+		$md_body = wp_remote_retrieve_body( $md_response );
+		$parsed  = swell_child_parse_frontmatter( $md_body );
+
+		$skills[] = [
+			'name'        => $parsed['name'] ?: $name,
+			'description' => $parsed['description'] ?: '',
+		];
+	}
+
+	/* キャッシュ保存（1時間） */
+	set_transient( $cache_key, $skills, HOUR_IN_SECONDS );
+	/* フォールバック用（期限なし） */
+	update_option( $fallback_key, $skills );
+
+	return $skills;
+}
+
+/**
+ * SKILL.md の YAML frontmatter をパース
+ */
+function swell_child_parse_frontmatter( $markdown ) {
+	$result = [ 'name' => '', 'description' => '' ];
+
+	if ( ! preg_match( '/\A---\s*\n(.*?)\n---/s', $markdown, $m ) ) {
+		return $result;
+	}
+
+	$fm = $m[1];
+
+	/* name */
+	if ( preg_match( '/^name:\s*(.+)$/m', $fm, $n ) ) {
+		$result['name'] = trim( $n[1] );
+	}
+
+	/* description（複数行対応） */
+	if ( preg_match( '/^description:\s*(?:>\s*)?\n?((?:\s{2,}.+\n?)+)/m', $fm, $d ) ) {
+		$result['description'] = trim( preg_replace( '/\s+/', ' ', $d[1] ) );
+	} elseif ( preg_match( '/^description:\s*(.+)$/m', $fm, $d ) ) {
+		$result['description'] = trim( $d[1] );
+	}
+
+	return $result;
+}
+
+/**
+ * スキルのカテゴリマッピング
+ */
+function swell_child_skill_categories() {
+	return [
+		'Document Creation' => [ 'docx', 'pptx', 'xlsx', 'pdf' ],
+		'Design & Visual' => [ 'canvas-design', 'eyecatch-maker', 'brand-guidelines' ],
+		'Learning & Development' => [ 'quiz-maker', 'review-scheduler', 'mentoring-harness-teaching-style-absorber' ],
+		'Productivity' => [ 'notion-sync', 'chat-summarizer', 'schedule' ],
+		'Technical' => [ 'mcp-builder', 'web-artifacts-builder', 'mactextui-control' ],
+		'Professional Services' => [ 'career-consultant', 'question-analyzer' ],
+		'Skill Management' => [ 'skill-creator', 'skill-updater' ],
+	];
+}
