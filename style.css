@@ -1271,6 +1271,7 @@ body {
   position: relative;
   margin: 2em 0;
   border-radius: 10px;
+  overflow: hidden;
   background: var(--code-bg);
   font-family: var(--code-font);
   font-size: 14px;
