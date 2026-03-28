@@ -1742,6 +1742,10 @@ body {
 }
 
 /* SWELL/WP のデフォルトスタイルをリセット */
+html:has(body.chat-page) {
+  margin-top: 0 !important;
+}
+
 body.chat-page,
 body.chat-page.admin-bar {
   margin: 0 !important;
@@ -2084,6 +2088,66 @@ body.chat-page .p-fixBtnWrap {
 }
 
 @keyframes chat-spin { to { transform: rotate(360deg); } }
+
+/* --- プラスメニュー --- */
+.chat-plus-menu { position: relative; }
+
+.chat-plus-menu__trigger {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--chat-border);
+  background: transparent;
+  color: var(--chat-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+  padding: 0;
+}
+
+.chat-plus-menu__trigger:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--chat-text);
+}
+
+.chat-plus-menu__dropdown {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: var(--chat-composer-bg);
+  border: 1px solid var(--chat-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  padding: 4px;
+  z-index: 100;
+}
+
+.chat-plus-menu.is-open .chat-plus-menu__dropdown { display: block; }
+
+.chat-plus-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: var(--text-xs);
+  color: var(--chat-text);
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.chat-plus-menu__item:hover { background: rgba(0, 0, 0, 0.04); }
+
+.chat-plus-menu__item svg { flex-shrink: 0; color: var(--chat-text-muted); }
 
 /* --- 初期状態（空チャット）--- */
 body.chat-page.is-empty .chat-messages { display: none; }

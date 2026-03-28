@@ -19,8 +19,16 @@
   var labelEl = document.getElementById('chat-model-label');
   var composerModelEl = document.getElementById('chat-composer-model');
 
+  /* プラスメニュー要素 */
+  var plusMenu = document.getElementById('chat-plus-menu');
+  var plusTrigger = document.getElementById('chat-plus-trigger');
+
   function init() {
     if (!window.chatConfig) return;
+
+    /* html admin-bar余白をリセット */
+    document.documentElement.style.marginTop = '0';
+
 
     if (chatConfig.models && chatConfig.models.length > 0) {
       chatConfig.models.forEach(function (m) {
@@ -46,6 +54,12 @@
     });
     textarea.addEventListener('input', autoResize);
     newChatBtn.addEventListener('click', handleNewChat);
+
+    /* プラスメニュー */
+    if (plusTrigger && plusMenu) {
+      plusTrigger.addEventListener('click', function () { plusMenu.classList.toggle('is-open'); });
+      document.addEventListener('click', function (e) { if (!plusMenu.contains(e.target)) plusMenu.classList.remove('is-open'); });
+    }
   }
 
   function selectModel(m) {

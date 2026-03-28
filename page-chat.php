@@ -38,7 +38,27 @@ if ( ! current_user_can( 'manage_options' ) ) {
 	<div class="chat-composer__inner">
 		<textarea id="chat-textarea" class="chat-composer__textarea" placeholder="本日はどのようなお手伝いをさせていただけますか？" rows="1" aria-label="Chat message input"></textarea>
 		<div class="chat-composer__controls">
-			<div class="chat-composer__left"></div>
+			<div class="chat-composer__left">
+				<div id="chat-plus-menu" class="chat-plus-menu">
+					<button id="chat-plus-trigger" class="chat-plus-menu__trigger" type="button" aria-label="Add">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+					</button>
+					<div id="chat-plus-dropdown" class="chat-plus-menu__dropdown">
+						<button class="chat-plus-menu__item" data-action="web-search" type="button">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+							<span>ウェブ検索</span>
+						</button>
+						<button class="chat-plus-menu__item" data-action="code" type="button">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+							<span>コード生成</span>
+						</button>
+						<button class="chat-plus-menu__item" data-action="image" type="button">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+							<span>画像生成</span>
+						</button>
+					</div>
+				</div>
+			</div>
 			<div class="chat-composer__right">
 				<span id="chat-composer-model" class="chat-composer__model-name"></span>
 				<button id="chat-send" class="chat-composer__send" type="button" aria-label="Send message">
