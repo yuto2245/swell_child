@@ -9,6 +9,7 @@
   var webSearchEnabled = false;
   var reasoningEnabled = false;
   var selectedSkills = [];
+  var ragEnabled = false;
 
   var messagesContainer = document.getElementById('chat-messages');
   var textarea = document.getElementById('chat-textarea');
@@ -83,6 +84,17 @@
         e.stopPropagation();
         reasoningEnabled = !reasoningEnabled;
         rsToggle.classList.toggle('is-active', reasoningEnabled);
+      });
+    }
+
+    /* RAGトグル */
+    var ragToggle = document.getElementById('chat-rag-toggle');
+    if (ragToggle) {
+      ragToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        ragEnabled = !ragEnabled;
+        ragToggle.classList.toggle('is-active', ragEnabled);
       });
     }
 
@@ -179,6 +191,7 @@
       if (selectedSkills.length > 0) {
         formData.append('skills', JSON.stringify(selectedSkills));
       }
+      formData.append('rag', ragEnabled ? '1' : '0');
 
       var response = await fetch(chatConfig.ajaxUrl, {
         method: 'POST',

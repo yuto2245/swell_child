@@ -329,8 +329,8 @@ function swell_child_ajax_chat_handler() {
 	$reasoning  = ! empty( $_POST['reasoning'] ) && $_POST['reasoning'] === '1';
 	$skill_ids  = isset( $_POST['skills'] ) ? json_decode( wp_unslash( $_POST['skills'] ), true ) : array();
 	if ( ! is_array( $skill_ids ) ) { $skill_ids = array(); }
-	/* スキルIDをサニタイズ */
 	$skill_ids = array_map( 'sanitize_text_field', $skill_ids );
+	$rag_enabled = ! empty( $_POST['rag'] ) && $_POST['rag'] === '1';
 
 	/* ホワイトリスト検証 */
 	$allowed_models = array_column( swell_child_chat_models(), 'id' );
@@ -357,6 +357,18 @@ function swell_child_ajax_chat_handler() {
 	header( 'X-Accel-Buffering: no' );
 	@ini_set( 'zlib.output_compression', 0 );
 	while ( ob_get_level() ) { ob_end_flush(); }
+
+	/* RAG: ブログ記事をsystemプロンプトに注入 */
+	if ( $rag_enabled && ! empty( $clean ) ) {
+		$last_msg = end( $clean );
+		$rag_context = swell_child_rag_search( $last_msg['content'] );
+		if ( $rag_context ) {
+			array_unshift( $clean, array(
+				'role'    => 'system',
+				'content' => "以下はブログ記事の関連情報です。回答の参考にしてください。\n\n" . $rag_context,
+			) );
+		}
+	}
 
 	try {
 		switch ( $type ) {
@@ -571,6 +583,35 @@ function swell_child_parse_openai_sse( $chunk, &$buffer ) {
 		$t = isset( $d['choices'][0]['delta']['content'] ) ? $d['choices'][0]['delta']['content'] : '';
 		if ( $t !== '' ) { echo "data: " . wp_json_encode( array( 'token' => $t ) ) . "\n\n"; flush(); }
 	}
+}
+
+/* --- RAG: ブログ記事検索 --- */
+
+function swell_child_rag_search( $query, $max_articles = 3, $max_chars = 2000 ) {
+	$words = array_filter( preg_split( '/[\s　]+/u', $query ) );
+	if ( empty( $words ) ) return '';
+
+	$args = array(
+		'post_type'      => 'post',
+		'post_status'    => 'publish',
+		'posts_per_page' => $max_articles,
+		's'              => implode( ' ', $words ),
+	);
+	$posts = get_posts( $args );
+	if ( empty( $posts ) ) return '';
+
+	$context = '';
+	foreach ( $posts as $p ) {
+		$title   = $p->post_title;
+		$content = strip_shortcodes( $p->post_content );
+		$content = wp_strip_all_tags( $content );
+		$content = preg_replace( '/\s+/', ' ', $content );
+		if ( strlen( $content ) > $max_chars ) {
+			$content = mb_substr( $content, 0, $max_chars ) . '...';
+		}
+		$context .= "<article>\n<title>" . esc_html( $title ) . "</title>\n<content>" . $content . "</content>\n</article>\n\n";
+	}
+	return $context;
 }
 
 /* --- Claude Skills一覧取得（AJAX） --- */
