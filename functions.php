@@ -437,41 +437,68 @@ function swell_child_stream_google( $model, $messages ) {
 
 	$client = \Gemini::client( $key );
 
-	// メッセージをGemini形式に変換
-	$prompt = '';
+	// メッセージをGemini Content形式に変換
+	$contents = [];
+	$systemInstruction = null;
 	foreach ( $messages as $m ) {
-		$prompt .= $m['role'] . ': ' . $m['content'] . "\n";
+		if ( $m['role'] === 'system' ) {
+			$systemInstruction = \Gemini\Data\Content::parse( $m['content'], \Gemini\Enums\Role::USER );
+			continue;
+		}
+		$role = $m['role'] === 'assistant' ? \Gemini\Enums\Role::MODEL : \Gemini\Enums\Role::USER;
+		$contents[] = \Gemini\Data\Content::parse( $m['content'], $role );
 	}
 
-	$stream = $client->generativeModel( model: $model )->streamGenerateContent( $prompt );
+	$generativeModel = $client->generativeModel( $model );
+	if ( $systemInstruction ) {
+		$generativeModel = $generativeModel->withSystemInstruction( $systemInstruction );
+	}
+
+	$stream = $generativeModel->streamGenerateContent( ...$contents );
 	foreach ( $stream as $response ) {
-		swell_child_sse_token( $response->text() );
+		try {
+			swell_child_sse_token( $response->text() );
+		} catch ( \Throwable $e ) {
+			// text以外のパート（画像等）はスキップ
+			continue;
+		}
 	}
 }
 
-/* --- ストリーミング: xAI Grok (SDK) --- */
+/* --- ストリーミング: xAI Grok (cURL — SDKがストリーミング非対応のため) --- */
 
 function swell_child_stream_xai( $model, $messages ) {
 	$key = get_option( 'swell_child_xai_key', '' );
 	if ( ! $key ) { swell_child_sse_error( 'xAI API key not set.' ); return; }
 
-	$config = new \GrokPHP\Client\Config\GrokConfig( $key );
-	$client = new \GrokPHP\Client\Clients\GrokClient( $config );
-
-	$options = new \GrokPHP\Client\Config\ChatOptions(
-		model: $model,
-		temperature: 0.7,
-		stream: true,
-	);
-
-	$response = $client->chat( $messages, $options );
-
-	// Grok SDKのストリーミングレスポンスを処理
-	if ( is_array( $response ) ) {
-		// ストリーミング未対応の場合はバッチレスポンス
-		$content = $response['choices'][0]['message']['content'] ?? '';
-		swell_child_sse_token( $content );
-	}
+	$buffer = '';
+	$ch = curl_init( 'https://api.x.ai/v1/chat/completions' );
+	curl_setopt_array( $ch, [
+		CURLOPT_POST           => true,
+		CURLOPT_HTTPHEADER     => [ 'Content-Type: application/json', 'Authorization: Bearer ' . $key ],
+		CURLOPT_POSTFIELDS     => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
+		CURLOPT_RETURNTRANSFER => false,
+		CURLOPT_TIMEOUT        => 120,
+		CURLOPT_WRITEFUNCTION  => function ( $ch, $chunk ) use ( &$buffer ) {
+			$buffer .= $chunk;
+			while ( ( $pos = strpos( $buffer, "\n" ) ) !== false ) {
+				$line   = substr( $buffer, 0, $pos );
+				$buffer = substr( $buffer, $pos + 1 );
+				$line   = trim( $line );
+				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
+				$json = substr( $line, 6 );
+				if ( $json === '[DONE]' ) return strlen( $chunk );
+				$d = json_decode( $json, true );
+				if ( ! $d ) continue;
+				$t = $d['choices'][0]['delta']['content'] ?? '';
+				swell_child_sse_token( $t );
+			}
+			return strlen( $chunk );
+		},
+	] );
+	curl_exec( $ch );
+	if ( curl_errno( $ch ) ) { swell_child_sse_error( curl_error( $ch ) ); }
+	curl_close( $ch );
 }
 
 /* --- チャットページ用アセット読み込み --- */
