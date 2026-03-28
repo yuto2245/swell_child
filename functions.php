@@ -76,23 +76,24 @@ add_action('wp_enqueue_scripts', function() {
 			true
 		);
 
-		/* Prism.js 追加言語（jsDelivrバンドルで1リクエストにまとめる） */
+		/* Prism.js 追加言語（jsDelivrバンドル — 依存関係順に並べる） */
 		wp_enqueue_script(
 			'prismjs-langs',
 			'https://cdn.jsdelivr.net/combine/'
-				. 'npm/prismjs@1.29.0/components/prism-abap.min.js,'
-				. 'npm/prismjs@1.29.0/components/prism-python.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-markup.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-markup-templating.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-javascript.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-typescript.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-php.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-css-extras.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-abap.min.js,'
+				. 'npm/prismjs@1.29.0/components/prism-python.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-bash.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-json.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-yaml.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-sql.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-java.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-go.min.js,'
-				. 'npm/prismjs@1.29.0/components/prism-css-extras.min.js,'
-				. 'npm/prismjs@1.29.0/components/prism-markup.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-diff.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-ruby.min.js,'
 				. 'npm/prismjs@1.29.0/components/prism-csharp.min.js',
