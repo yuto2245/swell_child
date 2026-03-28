@@ -10,30 +10,50 @@ WordPress SWELL テーマの子テーマで、**Anthropic風の洗練されたUI
 - **サイトURL**: http://swell-local.local
 - **管理画面**: http://swell-local.local/wp-admin
 - **親テーマ**: SWELL（ライセンス認証済み）
+- **本番サーバー**: Xserver（sapjp.net）
+- **本番PHP**: **7.4.33**（変更不可 — SWELLテーマの互換性のため）
+- **開発PHP**: 8.4.18（本番と異なるため注意）
+
+## 本番環境の制約（重要）
+
+### PHPバージョン制約
+- **本番は PHP 7.4.33**。PHP 8.x 以上を要求するライブラリ・SDKは使用禁止
+- Composer パッケージ（`composer require`）は原則使用不可（PHP 8.x 依存が多い）
+- 外部APIの呼び出しは **cURL（`curl_init`）** または **`wp_remote_get/post`** を使用すること
+
+### デプロイ方法
+- GitHubのmainブランチをZIPダウンロード → WordPress管理画面からテーマアップロード
+- `composer install` や `npm install` は本番で実行できない
+- **`vendor/` や `node_modules/` をリポジトリに含めてはならない**（PHP 7.4非互換のコードが含まれるとサイト全体がダウンする）
+
+### 過去のインシデント
+- **PR #15 (2026-03-28)**: PHP SDK導入（`anthropic-ai/sdk` 等、PHP 8.2要求）により本番サイト全体がFatal Errorでダウン。PR #17 でRevert復旧。**functions.php でのFatal Errorはサイト全体を停止させる。**
 
 ## ディレクトリ構造
 
 ```
 swell_child/
-├── style.css            # 全カスタムCSS（Anthropic風デザインシステム）
-├── functions.php        # 子テーマ関数（CSS/JS/Fonts読み込み）
-├── front-page.php       # トップページテンプレート
-├── screenshot.png       # テーマスクリーンショット
-├── CLAUDE.md            # このファイル
+├── style.css              # 全カスタムCSS（デザインシステム + コードブロック + チャット + スキル）
+├── functions.php          # 子テーマ関数（CSS/JS/Fonts + コードブロック + チャットAPI + スキルAPI）
+├── front-page.php         # トップページテンプレート
+├── page-chat.php          # チャットページテンプレート（管理者専用）
+├── page-skill.php         # スキル一覧ページテンプレート
+├── screenshot.png         # テーマスクリーンショット
+├── CLAUDE.md              # このファイル
 ├── js/
-│   └── front-page.js    # トップページ用JS（タブ、フェードイン、スクロール制御）
+│   ├── front-page.js      # トップページ用JS
+│   ├── chat.js            # チャットページ用JS（SSE受信、Markdown、モデル切替）
+│   ├── code-block.js      # コードブロックUI（コピー、行番号、ハイライト）
+│   └── code-block-editor.js  # ブロックエディタ拡張（言語セレクタ）
 ├── img/
 │   ├── visual-desert.jpg  # ビジュアルセクション左画像
-│   └── hero-bg.jpg        # ビジュアルセクション右画像
-├── design/              # デザイン参考資料（開発用）
-│   ├── design_system.md
-│   ├── current_website_design.png
-│   ├── design_image1.png
-│   ├── design_sample1.png
-│   ├── openai.png
-│   ├── claude.png
-│   └── slider_design.png
-└── swell_child_backup/  # 元のデフォルトファイルバックアップ
+│   ├── hero-bg.jpg        # ビジュアルセクション右画像
+│   └── chat/              # チャットプロバイダーアイコン
+│       ├── claude.png
+│       ├── openai.png
+│       ├── gemini.png
+│       └── grok.png
+└── design/                # デザイン参考資料（開発用）
 ```
 
 ## 実装済みセクション（front-page.php）
@@ -127,6 +147,8 @@ claude
 | 画像が表示されない | `get_stylesheet_directory_uri()`を使用 |
 | ブロックエディタで「ブロックされました」 | SWELLライセンス認証を確認 |
 | style.css編集でテーマ名が変わった | テーマヘッダーコメントを保持すること |
+| **サイト全体がFatal Error** | functions.phpでのPHP互換性エラー。本番PHP 7.4を確認。`vendor/`が含まれていないか確認 |
+| Composerパッケージを使いたい | **使用不可**。本番PHP 7.4では大半のSDKが動作しない。cURLを使用すること |
 
 ## Design Context
 
