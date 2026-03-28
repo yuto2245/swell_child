@@ -6,6 +6,10 @@
   var currentModelLabel = '';
   var currentModelType = '';
   var isStreaming = false;
+  var webSearchEnabled = false;
+  var reasoningEnabled = false;
+  var selectedSkills = [];
+  var ragEnabled = false;
 
   var messagesContainer = document.getElementById('chat-messages');
   var textarea = document.getElementById('chat-textarea');
@@ -60,6 +64,75 @@
       plusTrigger.addEventListener('click', function () { plusMenu.classList.toggle('is-open'); });
       document.addEventListener('click', function (e) { if (!plusMenu.contains(e.target)) plusMenu.classList.remove('is-open'); });
     }
+
+    /* ウェブ検索トグル */
+    var wsToggle = document.getElementById('chat-web-search-toggle');
+    if (wsToggle) {
+      wsToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        webSearchEnabled = !webSearchEnabled;
+        wsToggle.classList.toggle('is-active', webSearchEnabled);
+      });
+    }
+
+    /* 推論モードトグル */
+    var rsToggle = document.getElementById('chat-reasoning-toggle');
+    if (rsToggle) {
+      rsToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        reasoningEnabled = !reasoningEnabled;
+        rsToggle.classList.toggle('is-active', reasoningEnabled);
+      });
+    }
+
+    /* RAGトグル */
+    var ragToggle = document.getElementById('chat-rag-toggle');
+    if (ragToggle) {
+      ragToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        ragEnabled = !ragEnabled;
+        ragToggle.classList.toggle('is-active', ragEnabled);
+      });
+    }
+
+    /* スキル選択 */
+    var skillsBtn = document.getElementById('chat-skills-btn');
+    if (skillsBtn) {
+      skillsBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        loadSkillsList();
+      });
+    }
+  }
+
+  function loadSkillsList() {
+    var fd = new FormData();
+    fd.append('action', 'swell_chat_skills');
+    fd.append('_wpnonce', chatConfig.nonce);
+    fetch(chatConfig.ajaxUrl, { method: 'POST', body: fd })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res.success || !res.data || res.data.length === 0) {
+          alert('スキルが見つかりません');
+          return;
+        }
+        var names = res.data.map(function (s) { return s.title; });
+        var chosen = prompt('使用するスキルを選択（カンマ区切りで番号）:\n' + names.map(function (n, i) { return (i + 1) + '. ' + n; }).join('\n'));
+        if (!chosen) return;
+        selectedSkills = [];
+        chosen.split(',').forEach(function (num) {
+          var idx = parseInt(num.trim(), 10) - 1;
+          if (idx >= 0 && idx < res.data.length) {
+            selectedSkills.push(res.data[idx].id);
+          }
+        });
+        var btn = document.getElementById('chat-skills-btn');
+        if (btn) btn.classList.toggle('is-active', selectedSkills.length > 0);
+      });
   }
 
   function selectModel(m) {
@@ -104,12 +177,25 @@
     aiContent.innerHTML = '<span class="chat-cursor"></span>';
 
     var fullText = '';
+    var thinkingText = '';
 
     try {
-      var response = await fetch(chatConfig.restUrl, {
+      var formData = new FormData();
+      formData.append('action', 'swell_chat_stream');
+      formData.append('_wpnonce', chatConfig.nonce);
+      formData.append('model', currentModel);
+      formData.append('type', currentModelType);
+      formData.append('messages', JSON.stringify(conversationHistory));
+      formData.append('web_search', webSearchEnabled ? '1' : '0');
+      formData.append('reasoning', reasoningEnabled ? '1' : '0');
+      if (selectedSkills.length > 0) {
+        formData.append('skills', JSON.stringify(selectedSkills));
+      }
+      formData.append('rag', ragEnabled ? '1' : '0');
+
+      var response = await fetch(chatConfig.ajaxUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': chatConfig.nonce },
-        body: JSON.stringify({ model: currentModel, type: currentModelType, messages: conversationHistory })
+        body: formData
       });
 
       if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -132,7 +218,18 @@
           try {
             var data = JSON.parse(jsonStr);
             if (data.error) { aiContent.innerHTML = '<span class="chat-error">Error: ' + escapeHtml(data.error) + '</span>'; break; }
-            if (data.token) { fullText += data.token; aiContent.innerHTML = renderMarkdown(fullText) + '<span class="chat-cursor"></span>'; scrollToBottom(); }
+            if (data.thinking) {
+              thinkingText += data.thinking;
+              var thinkingHtml = '<details class="chat-thinking" open><summary>思考中...</summary><div class="chat-thinking__content">' + escapeHtml(thinkingText) + '</div></details>';
+              aiContent.innerHTML = thinkingHtml + '<span class="chat-cursor"></span>';
+              scrollToBottom();
+            }
+            if (data.token) {
+              fullText += data.token;
+              var thHtml = thinkingText ? '<details class="chat-thinking"><summary>思考過程</summary><div class="chat-thinking__content">' + escapeHtml(thinkingText) + '</div></details>' : '';
+              aiContent.innerHTML = thHtml + renderMarkdown(fullText) + '<span class="chat-cursor"></span>';
+              scrollToBottom();
+            }
           } catch (e) {}
         }
       }
