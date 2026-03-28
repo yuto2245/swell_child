@@ -311,48 +311,63 @@ function swell_child_chat_settings_page() {
 	echo '</form></div>';
 }
 
-/* --- REST API エンドポイント --- */
+/* --- AJAX SSEエンドポイント（PHP 7.4互換、cURL直接呼び出し） --- */
 
-add_action( 'rest_api_init', function () {
-	register_rest_route( 'swell-child/v1', '/chat', [
-		'methods'             => 'POST',
-		'callback'            => 'swell_child_chat_handler',
-		'permission_callback' => function () { return current_user_can( 'manage_options' ); },
-	] );
-} );
+add_action( 'wp_ajax_swell_chat_stream', 'swell_child_ajax_chat_handler' );
 
-function swell_child_chat_handler( WP_REST_Request $request ) {
-	$model    = sanitize_text_field( $request->get_param( 'model' ) );
-	$type     = sanitize_text_field( $request->get_param( 'type' ) );
-	$messages = $request->get_param( 'messages' );
+function swell_child_ajax_chat_handler() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		http_response_code( 403 );
+		exit;
+	}
+	check_ajax_referer( 'swell_chat_nonce', '_wpnonce' );
 
-	if ( empty( $model ) || empty( $type ) || ! is_array( $messages ) ) {
-		return new WP_Error( 'invalid_params', 'Missing required parameters.', [ 'status' => 400 ] );
+	$model    = sanitize_text_field( isset( $_POST['model'] ) ? $_POST['model'] : '' );
+	$type     = sanitize_text_field( isset( $_POST['type'] ) ? $_POST['type'] : '' );
+	$messages = json_decode( wp_unslash( isset( $_POST['messages'] ) ? $_POST['messages'] : '[]' ), true );
+	$web_search = ! empty( $_POST['web_search'] ) && $_POST['web_search'] === '1';
+	$reasoning  = ! empty( $_POST['reasoning'] ) && $_POST['reasoning'] === '1';
+	$skill_ids  = isset( $_POST['skills'] ) ? json_decode( wp_unslash( $_POST['skills'] ), true ) : array();
+	if ( ! is_array( $skill_ids ) ) { $skill_ids = array(); }
+	/* スキルIDをサニタイズ */
+	$skill_ids = array_map( 'sanitize_text_field', $skill_ids );
+
+	/* ホワイトリスト検証 */
+	$allowed_models = array_column( swell_child_chat_models(), 'id' );
+	$allowed_types  = array( 'anthropic', 'openai', 'google', 'xai' );
+	if ( ! in_array( $model, $allowed_models, true ) || ! in_array( $type, $allowed_types, true ) || ! is_array( $messages ) ) {
+		header( 'Content-Type: text/event-stream; charset=utf-8' );
+		echo "data: " . wp_json_encode( array( 'error' => 'Invalid parameters.' ) ) . "\n\n";
+		exit;
 	}
 
-	$clean = [];
+	/* メッセージサニタイズ */
+	$allowed_roles = array( 'system', 'user', 'assistant' );
+	$clean = array();
 	foreach ( $messages as $msg ) {
 		if ( ! isset( $msg['role'], $msg['content'] ) ) continue;
-		// contentはAI APIに送信するためsanitize_text_fieldを適用しない（改行・特殊文字を保持する必要がある）
-		$clean[] = [ 'role' => sanitize_text_field( $msg['role'] ), 'content' => $msg['content'] ];
-	}
-	if ( empty( $clean ) ) {
-		return new WP_Error( 'invalid_messages', 'No valid messages.', [ 'status' => 400 ] );
+		$role = sanitize_text_field( $msg['role'] );
+		if ( ! in_array( $role, $allowed_roles, true ) ) continue;
+		$clean[] = array( 'role' => $role, 'content' => $msg['content'] );
 	}
 
-	header( 'Content-Type: text/event-stream' );
+	/* SSEヘッダー + バッファ完全無効化 */
+	header( 'Content-Type: text/event-stream; charset=utf-8' );
 	header( 'Cache-Control: no-cache' );
 	header( 'X-Accel-Buffering: no' );
+	@ini_set( 'zlib.output_compression', 0 );
 	while ( ob_get_level() ) { ob_end_flush(); }
 
-	switch ( $type ) {
-		case 'anthropic': swell_child_stream_anthropic( $model, $clean ); break;
-		case 'openai':    swell_child_stream_openai( $model, $clean );    break;
-		case 'google':    swell_child_stream_google( $model, $clean );    break;
-		case 'xai':       swell_child_stream_xai( $model, $clean );      break;
-		default:
-			echo "data: " . wp_json_encode( [ 'error' => 'Unknown provider.' ] ) . "\n\n";
-			flush();
+	try {
+		switch ( $type ) {
+			case 'anthropic': swell_child_stream_anthropic( $model, $clean, $web_search, $reasoning, $skill_ids ); break;
+			case 'openai':    swell_child_stream_openai( $model, $clean, $web_search, $reasoning );    break;
+			case 'google':    swell_child_stream_google( $model, $clean, $web_search, $reasoning );    break;
+			case 'xai':       swell_child_stream_xai( $model, $clean, $web_search, $reasoning );      break;
+		}
+	} catch ( Exception $e ) {
+		error_log( '[swell_chat] ' . $e->getMessage() );
+		echo "data: " . wp_json_encode( array( 'error' => 'An error occurred.' ) ) . "\n\n";
 	}
 
 	echo "data: [DONE]\n\n";
@@ -362,7 +377,7 @@ function swell_child_chat_handler( WP_REST_Request $request ) {
 
 /* --- ストリーミング: Anthropic --- */
 
-function swell_child_stream_anthropic( $model, $messages ) {
+function swell_child_stream_anthropic( $model, $messages, $web_search = false, $reasoning = false, $skill_ids = array() ) {
 	$key = get_option( 'swell_child_anthropic_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'Anthropic API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -372,14 +387,30 @@ function swell_child_stream_anthropic( $model, $messages ) {
 		if ( $m['role'] === 'system' ) { $system = $m['content']; } else { $api_msgs[] = $m; }
 	}
 
-	$body = [ 'model' => $model, 'messages' => $api_msgs, 'max_tokens' => 4096, 'stream' => true ];
+	$body = array( 'model' => $model, 'messages' => $api_msgs, 'max_tokens' => 4096, 'stream' => true );
 	if ( $system ) { $body['system'] = $system; }
+	if ( $reasoning ) {
+		$body['thinking'] = array( 'type' => 'enabled', 'budget_tokens' => 10000 );
+		$body['max_tokens'] = 16000;
+	}
+
+	/* Skills対応: container.skillsとベータヘッダー */
+	$headers = array( 'Content-Type: application/json', 'x-api-key: ' . $key, 'anthropic-version: 2023-06-01' );
+	if ( ! empty( $skill_ids ) ) {
+		$headers[] = 'anthropic-beta: code-execution-2025-08-25,skills-2025-10-02,files-api-2025-04-14';
+		$skills_param = array();
+		foreach ( $skill_ids as $sid ) {
+			$skills_param[] = array( 'type' => 'custom', 'skill_id' => $sid, 'version' => 'latest' );
+		}
+		$body['container'] = array( 'skills' => $skills_param );
+		$body['tools'] = array( array( 'type' => 'code_execution_20250825', 'name' => 'code_execution' ) );
+	}
 
 	$buffer = '';
 	$ch = curl_init( 'https://api.anthropic.com/v1/messages' );
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
-		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'x-api-key: ' . $key, 'anthropic-version: 2023-06-01' ],
+		CURLOPT_HTTPHEADER => $headers,
 		CURLOPT_POSTFIELDS => wp_json_encode( $body ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
@@ -392,8 +423,14 @@ function swell_child_stream_anthropic( $model, $messages ) {
 				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
 				$d = json_decode( substr( $line, 6 ), true );
 				if ( ! $d ) continue;
-				if ( ( $d['type'] ?? '' ) === 'content_block_delta' && ( $d['delta']['text'] ?? '' ) !== '' ) {
-					echo "data: " . wp_json_encode( [ 'token' => $d['delta']['text'] ] ) . "\n\n"; flush();
+				$evt_type = isset( $d['type'] ) ? $d['type'] : '';
+				if ( $evt_type === 'content_block_delta' ) {
+					$delta_type = isset( $d['delta']['type'] ) ? $d['delta']['type'] : '';
+					if ( $delta_type === 'thinking_delta' && isset( $d['delta']['thinking'] ) ) {
+						echo "data: " . wp_json_encode( array( 'thinking' => $d['delta']['thinking'] ) ) . "\n\n"; flush();
+					} elseif ( isset( $d['delta']['text'] ) && $d['delta']['text'] !== '' ) {
+						echo "data: " . wp_json_encode( array( 'token' => $d['delta']['text'] ) ) . "\n\n"; flush();
+					}
 				}
 			}
 			return strlen( $chunk );
@@ -406,7 +443,7 @@ function swell_child_stream_anthropic( $model, $messages ) {
 
 /* --- ストリーミング: OpenAI --- */
 
-function swell_child_stream_openai( $model, $messages ) {
+function swell_child_stream_openai( $model, $messages, $web_search = false, $reasoning = false ) {
 	$key = get_option( 'swell_child_openai_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'OpenAI API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -415,7 +452,7 @@ function swell_child_stream_openai( $model, $messages ) {
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
 		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'Authorization: Bearer ' . $key ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
+		CURLOPT_POSTFIELDS => wp_json_encode( swell_child_build_openai_body( $model, $messages, $web_search, $reasoning ) ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
 		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) { swell_child_parse_openai_sse( $chunk, $buffer ); return strlen( $chunk ); },
@@ -425,9 +462,20 @@ function swell_child_stream_openai( $model, $messages ) {
 	curl_close( $ch );
 }
 
+function swell_child_build_openai_body( $model, $messages, $web_search, $reasoning = false ) {
+	$body = array( 'model' => $model, 'messages' => $messages, 'stream' => true );
+	if ( $web_search ) {
+		$body['tools'] = array( array( 'type' => 'web_search_preview' ) );
+	}
+	if ( $reasoning && in_array( $model, array( 'o3', 'o4-mini' ), true ) ) {
+		$body['reasoning_effort'] = 'medium';
+	}
+	return $body;
+}
+
 /* --- ストリーミング: Gemini --- */
 
-function swell_child_stream_google( $model, $messages ) {
+function swell_child_stream_google( $model, $messages, $web_search = false, $reasoning = false ) {
 	$key = get_option( 'swell_child_google_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'Google API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -443,7 +491,7 @@ function swell_child_stream_google( $model, $messages ) {
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
 		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json' ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'contents' => $contents ] ),
+		CURLOPT_POSTFIELDS => wp_json_encode( swell_child_build_google_body( $contents, $web_search ) ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
 		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) {
@@ -455,20 +503,28 @@ function swell_child_stream_google( $model, $messages ) {
 				if ( strpos( $line, 'data: ' ) !== 0 ) continue;
 				$d = json_decode( substr( $line, 6 ), true );
 				if ( ! $d ) continue;
-				$t = $d['candidates'][0]['content']['parts'][0]['text'] ?? '';
-				if ( $t !== '' ) { echo "data: " . wp_json_encode( [ 'token' => $t ] ) . "\n\n"; flush(); }
+				$t = isset( $d['candidates'][0]['content']['parts'][0]['text'] ) ? $d['candidates'][0]['content']['parts'][0]['text'] : '';
+				if ( $t !== '' ) { echo "data: " . wp_json_encode( array( 'token' => $t ) ) . "\n\n"; flush(); }
 			}
 			return strlen( $chunk );
 		},
 	] );
 	curl_exec( $ch );
-	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
+	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( array( 'error' => curl_error( $ch ) ) ) . "\n\n"; flush(); }
 	curl_close( $ch );
+}
+
+function swell_child_build_google_body( $contents, $web_search ) {
+	$body = array( 'contents' => $contents );
+	if ( $web_search ) {
+		$body['tools'] = array( array( 'google_search' => new stdClass() ) );
+	}
+	return $body;
 }
 
 /* --- ストリーミング: xAI (Grok) — OpenAI互換 --- */
 
-function swell_child_stream_xai( $model, $messages ) {
+function swell_child_stream_xai( $model, $messages, $web_search = false, $reasoning = false ) {
 	$key = get_option( 'swell_child_xai_key', '' );
 	if ( ! $key ) { echo "data: " . wp_json_encode( [ 'error' => 'xAI API key not set.' ] ) . "\n\n"; flush(); return; }
 
@@ -477,14 +533,22 @@ function swell_child_stream_xai( $model, $messages ) {
 	curl_setopt_array( $ch, [
 		CURLOPT_POST => true,
 		CURLOPT_HTTPHEADER => [ 'Content-Type: application/json', 'Authorization: Bearer ' . $key ],
-		CURLOPT_POSTFIELDS => wp_json_encode( [ 'model' => $model, 'messages' => $messages, 'stream' => true ] ),
+		CURLOPT_POSTFIELDS => wp_json_encode( swell_child_build_xai_body( $model, $messages, $web_search ) ),
 		CURLOPT_RETURNTRANSFER => false,
 		CURLOPT_TIMEOUT => 120,
 		CURLOPT_WRITEFUNCTION => function ( $ch, $chunk ) use ( &$buffer ) { swell_child_parse_openai_sse( $chunk, $buffer ); return strlen( $chunk ); },
 	] );
 	curl_exec( $ch );
-	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( [ 'error' => curl_error( $ch ) ] ) . "\n\n"; flush(); }
+	if ( curl_errno( $ch ) ) { echo "data: " . wp_json_encode( array( 'error' => curl_error( $ch ) ) ) . "\n\n"; flush(); }
 	curl_close( $ch );
+}
+
+function swell_child_build_xai_body( $model, $messages, $web_search ) {
+	$body = array( 'model' => $model, 'messages' => $messages, 'stream' => true );
+	if ( $web_search ) {
+		$body['search_parameters'] = array( 'mode' => 'auto' );
+	}
+	return $body;
 }
 
 /* --- OpenAI形式SSE共通パーサ（OpenAI / xAI 共用） --- */
@@ -500,10 +564,54 @@ function swell_child_parse_openai_sse( $chunk, &$buffer ) {
 		if ( $json === '[DONE]' ) return;
 		$d = json_decode( $json, true );
 		if ( ! $d ) continue;
-		$t = $d['choices'][0]['delta']['content'] ?? '';
-		if ( $t !== '' ) { echo "data: " . wp_json_encode( [ 'token' => $t ] ) . "\n\n"; flush(); }
+		/* 推論トークン（o3/o4-mini） */
+		$rc = isset( $d['choices'][0]['delta']['reasoning_content'] ) ? $d['choices'][0]['delta']['reasoning_content'] : '';
+		if ( $rc !== '' ) { echo "data: " . wp_json_encode( array( 'thinking' => $rc ) ) . "\n\n"; flush(); }
+		/* 通常トークン */
+		$t = isset( $d['choices'][0]['delta']['content'] ) ? $d['choices'][0]['delta']['content'] : '';
+		if ( $t !== '' ) { echo "data: " . wp_json_encode( array( 'token' => $t ) ) . "\n\n"; flush(); }
 	}
 }
+
+/* --- Claude Skills一覧取得（AJAX） --- */
+
+add_action( 'wp_ajax_swell_chat_skills', function () {
+	if ( ! current_user_can( 'manage_options' ) ) { wp_send_json_error( 'Unauthorized', 403 ); }
+	check_ajax_referer( 'swell_chat_nonce', '_wpnonce' );
+
+	$cached = get_transient( 'swell_child_chat_skills' );
+	if ( false !== $cached ) { wp_send_json_success( $cached ); }
+
+	$key = get_option( 'swell_child_anthropic_key', '' );
+	if ( ! $key ) { wp_send_json_success( array() ); }
+
+	$ch = curl_init( 'https://api.anthropic.com/v1/skills?limit=100&source=custom' );
+	curl_setopt_array( $ch, array(
+		CURLOPT_HTTPHEADER => array(
+			'x-api-key: ' . $key,
+			'anthropic-version: 2023-06-01',
+			'anthropic-beta: skills-2025-10-02',
+		),
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_TIMEOUT => 15,
+	) );
+	$response = curl_exec( $ch );
+	curl_close( $ch );
+
+	$data = json_decode( $response, true );
+	$skills = array();
+	if ( isset( $data['data'] ) && is_array( $data['data'] ) ) {
+		foreach ( $data['data'] as $s ) {
+			$skills[] = array(
+				'id'    => isset( $s['id'] ) ? $s['id'] : '',
+				'title' => isset( $s['display_title'] ) ? $s['display_title'] : '',
+			);
+		}
+	}
+
+	set_transient( 'swell_child_chat_skills', $skills, HOUR_IN_SECONDS );
+	wp_send_json_success( $skills );
+} );
 
 /* --- チャットページ用アセット読み込み --- */
 
@@ -513,10 +621,10 @@ add_action( 'wp_enqueue_scripts', function () {
 	$path = get_stylesheet_directory() . '/js/chat.js';
 	$ts   = file_exists( $path ) ? date( 'Ymdgis', filemtime( $path ) ) : '1';
 	wp_enqueue_script( 'chat-js', get_stylesheet_directory_uri() . '/js/chat.js', [], $ts, true );
-	wp_localize_script( 'chat-js', 'chatConfig', [
-		'restUrl'     => rest_url( 'swell-child/v1/chat' ),
-		'nonce'       => wp_create_nonce( 'wp_rest' ),
+	wp_localize_script( 'chat-js', 'chatConfig', array(
+		'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+		'nonce'       => wp_create_nonce( 'swell_chat_nonce' ),
 		'models'      => swell_child_chat_models(),
 		'iconBaseUrl' => get_stylesheet_directory_uri() . '/img/chat/',
-	] );
+	) );
 }, 20 );
