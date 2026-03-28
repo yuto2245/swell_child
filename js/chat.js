@@ -6,6 +6,7 @@
   var currentModelLabel = '';
   var currentModelType = '';
   var isStreaming = false;
+  var webSearchEnabled = false;
 
   var messagesContainer = document.getElementById('chat-messages');
   var textarea = document.getElementById('chat-textarea');
@@ -60,6 +61,17 @@
       plusTrigger.addEventListener('click', function () { plusMenu.classList.toggle('is-open'); });
       document.addEventListener('click', function (e) { if (!plusMenu.contains(e.target)) plusMenu.classList.remove('is-open'); });
     }
+
+    /* ウェブ検索トグル */
+    var wsToggle = document.getElementById('chat-web-search-toggle');
+    if (wsToggle) {
+      wsToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        webSearchEnabled = !webSearchEnabled;
+        wsToggle.classList.toggle('is-active', webSearchEnabled);
+      });
+    }
   }
 
   function selectModel(m) {
@@ -106,10 +118,17 @@
     var fullText = '';
 
     try {
-      var response = await fetch(chatConfig.restUrl, {
+      var formData = new FormData();
+      formData.append('action', 'swell_chat_stream');
+      formData.append('_wpnonce', chatConfig.nonce);
+      formData.append('model', currentModel);
+      formData.append('type', currentModelType);
+      formData.append('messages', JSON.stringify(conversationHistory));
+      formData.append('web_search', webSearchEnabled ? '1' : '0');
+
+      var response = await fetch(chatConfig.ajaxUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': chatConfig.nonce },
-        body: JSON.stringify({ model: currentModel, type: currentModelType, messages: conversationHistory })
+        body: formData
       });
 
       if (!response.ok) throw new Error('HTTP ' + response.status);
