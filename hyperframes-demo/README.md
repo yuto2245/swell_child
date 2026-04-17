@@ -5,9 +5,16 @@
 
 ## 内容
 
-- `hello.mp4` — HyperFrames で書き出したサンプル動画（1920x1080 / 30fps / 5s / H.264）
+### 1. Hello World（最小サンプル）
+- `hello.mp4` — 1920x1080 / 30fps / 5s / H.264
 - `preview.png` — 2.5秒時点のスナップショット
-- `index.html` — レンダリング元のHTML（GSAPで"Hello, HyperFrames"をフェードイン）
+- `index.html` — レンダリング元のHTML
+
+### 2. Claude Code 機能発表風（ターミナル + タイピング + ブランド表示）
+- `claude-code-intro.mp4` — 1920x1080 / 30fps / 10s / H.264
+- `claude-code-intro-preview.png` — 8.5秒時点のスナップショット（ブランド表示）
+- `claude-code-intro.html` — レンダリング元のHTML
+- Anthropic風ウォームパレット（#141413 / #d97757）、macOSターミナルUI、GSAPタイピング
 
 ## 再現手順
 
