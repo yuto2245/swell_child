@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="vendor/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #F8F7F5;
+        font-family: "Inter", "Noto Sans JP", sans-serif;
+      }
+
+      /* --- Scene 1: Logo + Tagline --- */
+      #scene1 {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        text-align: center;
+        opacity: 0;
+      }
+      #logo {
+        font-size: 120px;
+        font-weight: 700;
+        color: #1D1D1F;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      #accent-line {
+        width: 80px;
+        height: 2px;
+        background: #C15F3C;
+        margin: 28px auto 0;
+      }
+      #tagline {
+        margin-top: 24px;
+        font-size: 24px;
+        color: #86868B;
+        font-weight: 400;
+        letter-spacing: 0.01em;
+        line-height: 1.6;
+        opacity: 0;
+      }
+
+      /* --- Scene 2: Topic Pills --- */
+      #scene2 {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        text-align: center;
+        opacity: 0;
+      }
+      .pill-row {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 12px 32px;
+        border-radius: 100px;
+        font-size: 18px;
+        font-weight: 500;
+        color: #1D1D1F;
+        background: #FFFFFF;
+        border: 1px solid #E8E8ED;
+        white-space: nowrap;
+        opacity: 0;
+      }
+      .pill.accent {
+        background: #C15F3C;
+        color: #FFFFFF;
+        border-color: #C15F3C;
+      }
+
+      /* --- Scene 3: Categories + Final Brand --- */
+      #scene3 {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        text-align: center;
+        opacity: 0;
+      }
+      #kicker {
+        font-size: 14px;
+        color: #C15F3C;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 500;
+        margin-bottom: 32px;
+        opacity: 0;
+      }
+      #categories {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0;
+      }
+      .category {
+        font-size: 28px;
+        font-weight: 500;
+        color: #1D1D1F;
+        opacity: 0;
+      }
+      .cat-sep {
+        font-size: 28px;
+        color: #AFAFAF;
+        margin: 0 24px;
+        opacity: 0;
+      }
+
+      /* --- Final Brand Card --- */
+      #final-brand {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        text-align: center;
+        opacity: 0;
+      }
+      #final-logo {
+        font-size: 72px;
+        font-weight: 700;
+        color: #1D1D1F;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+      #final-line {
+        width: 48px;
+        height: 2px;
+        background: #C15F3C;
+        margin: 24px auto 0;
+      }
+      #final-url {
+        margin-top: 20px;
+        font-size: 18px;
+        color: #86868B;
+        letter-spacing: 0.05em;
+        font-weight: 400;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="15"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Scene 1: Logo + Tagline -->
+      <div id="scene1">
+        <div id="logo">SAP-JP</div>
+        <div id="accent-line"></div>
+        <div id="tagline">SAPキャリアと技術の最前線を発信するメディア</div>
+      </div>
+
+      <!-- Scene 2: Topic Pills -->
+      <div id="scene2">
+        <div class="pill-row top">
+          <span class="pill" id="p1">S/4HANA</span>
+          <span class="pill" id="p2">ABAP</span>
+          <span class="pill" id="p3">Fiori</span>
+          <span class="pill" id="p4">BTP</span>
+        </div>
+        <div class="pill-row bottom">
+          <span class="pill accent" id="p5">AI</span>
+          <span class="pill" id="p6">SAP Basis</span>
+          <span class="pill" id="p7">RFC</span>
+          <span class="pill" id="p8">CDS View</span>
+        </div>
+      </div>
+
+      <!-- Scene 3: Categories -->
+      <div id="scene3">
+        <div id="kicker">Topics we cover</div>
+        <div id="categories">
+          <span class="category" id="c1">SAP</span>
+          <span class="cat-sep" id="s1">&middot;</span>
+          <span class="category" id="c2">ABAP</span>
+          <span class="cat-sep" id="s2">&middot;</span>
+          <span class="category" id="c3">AI</span>
+          <span class="cat-sep" id="s3">&middot;</span>
+          <span class="category" id="c4">開発基礎</span>
+        </div>
+      </div>
+
+      <!-- Final Brand Card -->
+      <div id="final-brand">
+        <div id="final-logo">SAP-JP</div>
+        <div id="final-line"></div>
+        <div id="final-url">sapjp.net</div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ========== Scene 1: Logo + Tagline (0–4s) ==========
+      tl.fromTo(
+        "#scene1",
+        { xPercent: -50, yPercent: -50, opacity: 0 },
+        { xPercent: -50, yPercent: -50, opacity: 1, duration: 0.01 },
+        0
+      );
+      tl.fromTo(
+        "#logo",
+        { opacity: 0, y: -30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" },
+        0.3
+      );
+      tl.fromTo(
+        "#accent-line",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.6, ease: "power2.out" },
+        0.8
+      );
+      tl.fromTo(
+        "#tagline",
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
+        1.2
+      );
+
+      // Scene 1 exit
+      tl.to(
+        "#scene1",
+        { xPercent: -50, yPercent: -50, opacity: 0, y: -40, duration: 0.7, ease: "power2.inOut" },
+        3.5
+      );
+      tl.set("#scene1", { visibility: "hidden" }, 4.2);
+
+      // ========== Scene 2: Topic Pills (4–9s) ==========
+      tl.fromTo(
+        "#scene2",
+        { xPercent: -50, yPercent: -50, opacity: 0 },
+        { xPercent: -50, yPercent: -50, opacity: 1, duration: 0.01 },
+        4.0
+      );
+
+      var pills = ["#p1", "#p2", "#p3", "#p4", "#p5", "#p6", "#p7", "#p8"];
+      pills.forEach(function (id, i) {
+        tl.fromTo(
+          id,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
+          4.2 + i * 0.12
+        );
+      });
+
+      // Scene 2 exit
+      tl.to(
+        "#scene2",
+        { xPercent: -50, yPercent: -50, opacity: 0, y: -20, duration: 0.6, ease: "power2.in" },
+        8.5
+      );
+      tl.set("#scene2", { visibility: "hidden" }, 9.1);
+
+      // ========== Scene 3: Categories (9–12s) ==========
+      tl.fromTo(
+        "#scene3",
+        { xPercent: -50, yPercent: -50, opacity: 0 },
+        { xPercent: -50, yPercent: -50, opacity: 1, duration: 0.01 },
+        9.0
+      );
+      tl.fromTo(
+        "#kicker",
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
+        9.2
+      );
+
+      var cats = ["#c1", "#s1", "#c2", "#s2", "#c3", "#s3", "#c4"];
+      cats.forEach(function (id, i) {
+        tl.fromTo(
+          id,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
+          9.6 + i * 0.12
+        );
+      });
+
+      // Scene 3 exit
+      tl.to(
+        "#scene3",
+        { xPercent: -50, yPercent: -50, opacity: 0, duration: 0.5, ease: "power2.in" },
+        11.0
+      );
+      tl.set("#scene3", { visibility: "hidden" }, 11.5);
+
+      // ========== Final Brand Card (11.5–15s) ==========
+      tl.fromTo(
+        "#final-brand",
+        { xPercent: -50, yPercent: -50, opacity: 0, y: -30 },
+        { xPercent: -50, yPercent: -50, opacity: 1, y: -50, duration: 0.9, ease: "power3.out" },
+        11.5
+      );
+      tl.fromTo(
+        "#final-line",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.5, ease: "power2.out" },
+        12.0
+      );
+
+      // Final fade out
+      tl.to(
+        "#final-brand",
+        { xPercent: -50, yPercent: -50, opacity: 0, duration: 0.6, ease: "power2.in" },
+        14.2
+      );
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

@@ -16,6 +16,13 @@
 - `claude-code-intro.html` — レンダリング元のHTML
 - Anthropic風ウォームパレット（#141413 / #d97757）、macOSターミナルUI、GSAPタイピング
 
+### 3. SAP-JP ブランドイントロ（ライトモード / 3シーン構成）
+- `sapjp-brand-intro.mp4` — 1920x1080 / 30fps / 15s / H.264
+- `sapjp-brand-intro-preview.png` — 13秒時点（最終ブランドカード）
+- `sapjp-brand-intro.html` — レンダリング元のHTML
+- ウォームニュートラル (#F8F7F5) + テラコッタアクセント (#C15F3C)
+- Scene 1: SAP-JPロゴ + タグライン → Scene 2: トピックピル → Scene 3: カテゴリ → ブランドカード
+
 ## 再現手順
 
 ```sh
