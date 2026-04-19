@@ -529,3 +529,426 @@ add_action( 'wp_enqueue_scripts', function () {
 		'iconBaseUrl' => get_stylesheet_directory_uri() . '/img/chat/',
 	) );
 }, 20 );
+
+/* ========================================================================
+ * Popup — CPT + Enqueue + Render
+ * ======================================================================== */
+
+require_once get_stylesheet_directory() . '/inc/popup-cpt.php';
+
+/**
+ * フロント配信判定：配信対象 or プレビュー対象を返す
+ *
+ * @return array{post: WP_Post, is_preview: bool}|null
+ */
+function sapjp_popup_resolve_target() {
+	$preview = sapjp_popup_get_preview();
+	if ( $preview ) {
+		return array( 'post' => $preview, 'is_preview' => true );
+	}
+	$active = sapjp_popup_get_active();
+	if ( $active ) {
+		return array( 'post' => $active, 'is_preview' => false );
+	}
+	return null;
+}
+
+/**
+ * Popup アセット読み込み + JS に設定値を渡す
+ */
+add_action( 'wp_enqueue_scripts', function () {
+	$target = sapjp_popup_resolve_target();
+	if ( ! $target ) {
+		return;
+	}
+	$post       = $target['post'];
+	$is_preview = $target['is_preview'];
+
+	$css_path = get_stylesheet_directory() . '/assets/popup.css';
+	$js_path  = get_stylesheet_directory() . '/assets/popup.js';
+	$css_ver  = file_exists( $css_path ) ? date( 'Ymdgis', filemtime( $css_path ) ) : '1';
+	$js_ver   = file_exists( $js_path ) ? date( 'Ymdgis', filemtime( $js_path ) ) : '1';
+
+	wp_enqueue_style(
+		'sapjp-popup',
+		get_stylesheet_directory_uri() . '/assets/popup.css',
+		array(),
+		$css_ver
+	);
+
+	wp_enqueue_script(
+		'sapjp-popup',
+		get_stylesheet_directory_uri() . '/assets/popup.js',
+		array(),
+		$js_ver,
+		true
+	);
+
+	$cookie_days = (int) get_post_meta( $post->ID, '_popup_cookie_days', true );
+	$delay_ms    = (int) get_post_meta( $post->ID, '_popup_delay_ms', true );
+
+	wp_localize_script(
+		'sapjp-popup',
+		'sapjpPopupConfig',
+		array(
+			'popupId'    => (string) $post->ID,
+			'cookieDays' => $cookie_days > 0 ? $cookie_days : 30,
+			'delayMs'    => $delay_ms >= 0 ? $delay_ms : 1500,
+			'isPreview'  => $is_preview,
+		)
+	);
+}, 50 );
+
+/**
+ * defer 属性を popup.js に付与 / CSS を非クリティカル化
+ */
+add_filter( 'script_loader_tag', function ( $tag, $handle ) {
+	if ( 'sapjp-popup' === $handle && false === strpos( $tag, ' defer' ) ) {
+		$tag = str_replace( ' src=', ' defer src=', $tag );
+	}
+	return $tag;
+}, 10, 2 );
+
+add_filter( 'style_loader_tag', function ( $tag, $handle ) {
+	if ( 'sapjp-popup' !== $handle ) {
+		return $tag;
+	}
+	$tag = str_replace( "media='all'", "media='print' onload=\"this.media='all'\"", $tag );
+	$tag = str_replace( 'media="all"', 'media="print" onload="this.media=\'all\'"', $tag );
+	return $tag;
+}, 10, 2 );
+
+/**
+ * バリアント別レンダリングを呼び出す
+ */
+add_action( 'wp_footer', function () {
+	$target = sapjp_popup_resolve_target();
+	if ( ! $target ) {
+		return;
+	}
+	$post    = $target['post'];
+	$variant = get_post_meta( $post->ID, '_popup_variant', true ) ?: 'classic';
+
+	$fn = 'sapjp_popup_render_variant_' . $variant;
+	if ( ! function_exists( $fn ) ) {
+		$fn = 'sapjp_popup_render_variant_classic';
+	}
+	$fn( $post );
+}, 99 );
+
+/**
+ * Classic バリアント出力
+ *
+ * @param WP_Post $post
+ */
+function sapjp_popup_render_variant_classic( $post ) {
+	$title       = $post->post_title;
+	$description = $post->post_content;
+	$badge_text  = get_post_meta( $post->ID, '_popup_badge_text', true );
+	$later_text  = get_post_meta( $post->ID, '_popup_later_text', true );
+	$sub_text    = get_post_meta( $post->ID, '_popup_sub_text', true );
+	$sub_url     = get_post_meta( $post->ID, '_popup_sub_url', true );
+	$cta_text    = get_post_meta( $post->ID, '_popup_cta_text', true );
+	$cta_url     = get_post_meta( $post->ID, '_popup_cta_url', true );
+	$thumb_id    = get_post_thumbnail_id( $post->ID );
+	?>
+	<div id="sapjp-popup-backdrop"
+		class="sapjp-popup-backdrop sapjp-popup-backdrop--classic"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="sapjp-popup-title"
+		aria-hidden="true"
+		data-popup-id="<?php echo esc_attr( $post->ID ); ?>"
+		data-variant="classic">
+		<div class="sapjp-popup sapjp-popup--classic" role="document">
+			<button type="button"
+				class="sapjp-popup__close"
+				aria-label="<?php echo esc_attr__( '閉じる', 'swell_child' ); ?>">
+				<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg>
+			</button>
+
+			<div class="sapjp-popup__hero" aria-hidden="true">
+				<?php if ( $thumb_id ) : ?>
+					<?php echo wp_get_attachment_image( $thumb_id, 'medium_large', false, array(
+						'class'   => 'sapjp-popup__hero-image',
+						'alt'     => '',
+						'loading' => 'lazy',
+					) ); ?>
+				<?php else : ?>
+					<div class="sapjp-popup__mock">
+						<div class="sapjp-popup__mock-dots"><span></span><span></span><span></span></div>
+						<div class="sapjp-popup__mock-line sapjp-popup__mock-line--w40"></div>
+						<div class="sapjp-popup__mock-box">
+							<div class="sapjp-popup__mock-box-icon"></div>
+							<div class="sapjp-popup__mock-box-lines">
+								<div class="sapjp-popup__mock-line sapjp-popup__mock-line--w60"></div>
+								<div class="sapjp-popup__mock-line sapjp-popup__mock-line--w40"></div>
+							</div>
+						</div>
+						<div class="sapjp-popup__mock-line sapjp-popup__mock-line--w80 sapjp-popup__mock-line--accent"></div>
+						<div class="sapjp-popup__mock-line sapjp-popup__mock-line--w60"></div>
+					</div>
+				<?php endif; ?>
+			</div>
+
+			<div class="sapjp-popup__body">
+				<?php if ( '' !== $badge_text ) : ?>
+					<div class="sapjp-popup__pill-row">
+						<span class="sapjp-popup__pill">
+							<span class="sapjp-popup__pill-dot" aria-hidden="true"></span>
+							<?php echo esc_html( $badge_text ); ?>
+						</span>
+					</div>
+				<?php endif; ?>
+
+				<h2 id="sapjp-popup-title" class="sapjp-popup__title"><?php echo esc_html( $title ); ?></h2>
+
+				<?php if ( '' !== trim( $description ) ) : ?>
+					<p class="sapjp-popup__desc"><?php echo esc_html( $description ); ?></p>
+				<?php endif; ?>
+
+				<div class="sapjp-popup__actions">
+					<?php if ( '' !== $later_text ) : ?>
+						<button type="button" class="sapjp-popup__btn sapjp-popup__btn--text"><?php echo esc_html( $later_text ); ?></button>
+					<?php endif; ?>
+
+					<span class="sapjp-popup__actions-spacer"></span>
+
+					<?php if ( '' !== $sub_text ) : ?>
+						<?php if ( '' !== $sub_url ) : ?>
+							<a class="sapjp-popup__btn sapjp-popup__btn--ghost" href="<?php echo esc_url( $sub_url ); ?>"><?php echo esc_html( $sub_text ); ?></a>
+						<?php else : ?>
+							<button type="button" class="sapjp-popup__btn sapjp-popup__btn--ghost"><?php echo esc_html( $sub_text ); ?></button>
+						<?php endif; ?>
+					<?php endif; ?>
+
+					<?php if ( '' !== $cta_text ) : ?>
+						<?php if ( '' !== $cta_url ) : ?>
+							<a class="sapjp-popup__btn sapjp-popup__btn--primary" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_text ); ?></a>
+						<?php else : ?>
+							<button type="button" class="sapjp-popup__btn sapjp-popup__btn--primary"><?php echo esc_html( $cta_text ); ?></button>
+						<?php endif; ?>
+					<?php endif; ?>
+				</div>
+			</div>
+		</div>
+	</div>
+	<?php
+}
+
+/**
+ * Carded バリアント出力（changelog 形式）
+ *
+ * @param WP_Post $post
+ */
+function sapjp_popup_render_variant_carded( $post ) {
+	$title         = $post->post_title;
+	$eyebrow       = get_post_meta( $post->ID, '_popup_eyebrow', true );
+	$intro         = get_post_meta( $post->ID, '_popup_intro', true );
+	$head_initial  = get_post_meta( $post->ID, '_popup_head_initial', true );
+	if ( '' === $head_initial ) {
+		$head_initial = mb_substr( get_bloginfo( 'name' ) ?: 'S', 0, 1 );
+	}
+	$cards_json    = get_post_meta( $post->ID, '_popup_cards', true ) ?: '[]';
+	$cards         = json_decode( $cards_json, true );
+	if ( ! is_array( $cards ) ) { $cards = array(); }
+	$changelog_url = get_post_meta( $post->ID, '_popup_changelog_url', true );
+	$sub_text      = get_post_meta( $post->ID, '_popup_sub_text', true );
+	$sub_url       = get_post_meta( $post->ID, '_popup_sub_url', true );
+	$cta_text      = get_post_meta( $post->ID, '_popup_cta_text', true );
+	$cta_url       = get_post_meta( $post->ID, '_popup_cta_url', true );
+	$icons         = sapjp_popup_card_icon_svgs();
+	?>
+	<div id="sapjp-popup-backdrop"
+		class="sapjp-popup-backdrop sapjp-popup-backdrop--carded"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="sapjp-popup-title"
+		aria-hidden="true"
+		data-popup-id="<?php echo esc_attr( $post->ID ); ?>"
+		data-variant="carded">
+		<div class="sapjp-popup sapjp-popup--carded" role="document">
+			<button type="button" class="sapjp-popup__close" aria-label="<?php echo esc_attr__( '閉じる', 'swell_child' ); ?>">
+				<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg>
+			</button>
+
+			<header class="sapjp-popup__head">
+				<div class="sapjp-popup__head-icon" aria-hidden="true"><?php echo esc_html( $head_initial ); ?></div>
+				<div class="sapjp-popup__head-meta">
+					<?php if ( '' !== $eyebrow ) : ?>
+						<span class="sapjp-popup__eyebrow"><?php echo esc_html( $eyebrow ); ?></span>
+					<?php endif; ?>
+					<h2 id="sapjp-popup-title" class="sapjp-popup__head-title"><?php echo esc_html( $title ); ?></h2>
+				</div>
+			</header>
+
+			<div class="sapjp-popup__body">
+				<?php if ( '' !== $intro ) : ?>
+					<p class="sapjp-popup__intro"><?php echo esc_html( $intro ); ?></p>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $cards ) ) : ?>
+					<ul class="sapjp-popup__cards">
+						<?php foreach ( $cards as $card ) :
+							$icon_key = isset( $card['icon'] ) && isset( $icons[ $card['icon'] ] ) ? $card['icon'] : 'star';
+							$card_title = isset( $card['title'] ) ? $card['title'] : '';
+							$card_desc  = isset( $card['description'] ) ? $card['description'] : '';
+							$is_new     = ! empty( $card['is_new'] );
+							?>
+							<li class="sapjp-popup__card">
+								<span class="sapjp-popup__card-icon" aria-hidden="true"><?php
+									echo $icons[ $icon_key ]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+								?></span>
+								<div class="sapjp-popup__card-body">
+									<h3 class="sapjp-popup__card-title">
+										<span><?php echo esc_html( $card_title ); ?></span>
+										<?php if ( $is_new ) : ?>
+											<span class="sapjp-popup__new-tag">NEW</span>
+										<?php endif; ?>
+									</h3>
+									<?php if ( '' !== $card_desc ) : ?>
+										<p class="sapjp-popup__card-desc"><?php echo esc_html( $card_desc ); ?></p>
+									<?php endif; ?>
+								</div>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				<?php endif; ?>
+			</div>
+
+			<footer class="sapjp-popup__foot">
+				<?php if ( '' !== $eyebrow ) : ?>
+					<?php if ( '' !== $changelog_url ) : ?>
+						<a class="sapjp-popup__version-link" href="<?php echo esc_url( $changelog_url ); ?>"><?php echo esc_html( $eyebrow ); ?></a>
+					<?php else : ?>
+						<span class="sapjp-popup__version-link"><?php echo esc_html( $eyebrow ); ?></span>
+					<?php endif; ?>
+				<?php endif; ?>
+
+				<span class="sapjp-popup__foot-spacer"></span>
+
+				<?php if ( '' !== $sub_text ) : ?>
+					<?php if ( '' !== $sub_url ) : ?>
+						<a class="sapjp-popup__btn sapjp-popup__btn--ghost" href="<?php echo esc_url( $sub_url ); ?>"><?php echo esc_html( $sub_text ); ?></a>
+					<?php else : ?>
+						<button type="button" class="sapjp-popup__btn sapjp-popup__btn--ghost"><?php echo esc_html( $sub_text ); ?></button>
+					<?php endif; ?>
+				<?php endif; ?>
+
+				<?php if ( '' !== $cta_text ) : ?>
+					<?php if ( '' !== $cta_url ) : ?>
+						<a class="sapjp-popup__btn sapjp-popup__btn--primary" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_text ); ?></a>
+					<?php else : ?>
+						<button type="button" class="sapjp-popup__btn sapjp-popup__btn--primary"><?php echo esc_html( $cta_text ); ?></button>
+					<?php endif; ?>
+				<?php endif; ?>
+			</footer>
+		</div>
+	</div>
+	<?php
+}
+
+/**
+ * Playful バリアント出力（抽象シェイプ + 大見出し）
+ *
+ * @param WP_Post $post
+ */
+function sapjp_popup_render_variant_playful( $post ) {
+	$title       = $post->post_title;
+	$description = $post->post_content;
+	$hero_sup    = get_post_meta( $post->ID, '_popup_hero_sup', true );
+	$hero_title  = get_post_meta( $post->ID, '_popup_hero_title', true );
+	$mini_raw    = get_post_meta( $post->ID, '_popup_mini_tags', true );
+	$mini_tags   = sapjp_popup_parse_mini_tags( $mini_raw );
+	$badge_text  = get_post_meta( $post->ID, '_popup_badge_text', true );
+	$later_text  = get_post_meta( $post->ID, '_popup_later_text', true );
+	$sub_text    = get_post_meta( $post->ID, '_popup_sub_text', true );
+	$sub_url     = get_post_meta( $post->ID, '_popup_sub_url', true );
+	$cta_text    = get_post_meta( $post->ID, '_popup_cta_text', true );
+	$cta_url     = get_post_meta( $post->ID, '_popup_cta_url', true );
+	?>
+	<div id="sapjp-popup-backdrop"
+		class="sapjp-popup-backdrop sapjp-popup-backdrop--playful"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="sapjp-popup-title"
+		aria-hidden="true"
+		data-popup-id="<?php echo esc_attr( $post->ID ); ?>"
+		data-variant="playful">
+		<div class="sapjp-popup sapjp-popup--playful" role="document">
+			<button type="button" class="sapjp-popup__close" aria-label="<?php echo esc_attr__( '閉じる', 'swell_child' ); ?>">
+				<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg>
+			</button>
+
+			<div class="sapjp-popup__hero" aria-hidden="true">
+				<div class="sapjp-popup__shapes">
+					<span class="sapjp-popup__shape sapjp-popup__shape--s1"></span>
+					<span class="sapjp-popup__shape sapjp-popup__shape--s2"></span>
+					<span class="sapjp-popup__shape sapjp-popup__shape--s3"></span>
+					<span class="sapjp-popup__shape sapjp-popup__shape--s4"></span>
+					<span class="sapjp-popup__shape sapjp-popup__shape--s5"></span>
+				</div>
+				<?php if ( '' !== $hero_title || '' !== $hero_sup ) : ?>
+					<div class="sapjp-popup__hero-text">
+						<?php if ( '' !== $hero_sup ) : ?>
+							<span class="sapjp-popup__hero-sup"><?php echo esc_html( $hero_sup ); ?></span>
+						<?php endif; ?>
+						<?php if ( '' !== $hero_title ) : ?>
+							<span class="sapjp-popup__hero-title"><?php echo esc_html( $hero_title ); ?></span>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+			</div>
+
+			<div class="sapjp-popup__body">
+				<?php if ( '' !== $badge_text ) : ?>
+					<div class="sapjp-popup__pill-row">
+						<span class="sapjp-popup__pill">
+							<span class="sapjp-popup__pill-dot" aria-hidden="true"></span>
+							<?php echo esc_html( $badge_text ); ?>
+						</span>
+					</div>
+				<?php endif; ?>
+
+				<h2 id="sapjp-popup-title" class="sapjp-popup__title"><?php echo esc_html( $title ); ?></h2>
+
+				<?php if ( '' !== trim( $description ) ) : ?>
+					<p class="sapjp-popup__desc"><?php echo esc_html( $description ); ?></p>
+				<?php endif; ?>
+
+				<div class="sapjp-popup__actions">
+					<?php if ( '' !== $later_text ) : ?>
+						<button type="button" class="sapjp-popup__btn sapjp-popup__btn--text"><?php echo esc_html( $later_text ); ?></button>
+					<?php endif; ?>
+
+					<span class="sapjp-popup__actions-spacer"></span>
+
+					<?php if ( '' !== $sub_text ) : ?>
+						<?php if ( '' !== $sub_url ) : ?>
+							<a class="sapjp-popup__btn sapjp-popup__btn--ghost" href="<?php echo esc_url( $sub_url ); ?>"><?php echo esc_html( $sub_text ); ?></a>
+						<?php else : ?>
+							<button type="button" class="sapjp-popup__btn sapjp-popup__btn--ghost"><?php echo esc_html( $sub_text ); ?></button>
+						<?php endif; ?>
+					<?php endif; ?>
+
+					<?php if ( '' !== $cta_text ) : ?>
+						<?php if ( '' !== $cta_url ) : ?>
+							<a class="sapjp-popup__btn sapjp-popup__btn--primary" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_text ); ?></a>
+						<?php else : ?>
+							<button type="button" class="sapjp-popup__btn sapjp-popup__btn--primary"><?php echo esc_html( $cta_text ); ?></button>
+						<?php endif; ?>
+					<?php endif; ?>
+				</div>
+
+				<?php if ( ! empty( $mini_tags ) ) : ?>
+					<div class="sapjp-popup__tag-row">
+						<?php foreach ( $mini_tags as $tag ) : ?>
+							<span class="sapjp-popup__mini-tag"><?php echo esc_html( $tag ); ?></span>
+						<?php endforeach; ?>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
+	</div>
+	<?php
+}

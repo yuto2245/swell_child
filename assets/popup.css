@@ -1,0 +1,784 @@
+/*
+ * sapjp.net ポップアップ（Classic バリアント）
+ * popup.html の .v-classic を .sapjp-popup 名前空間に移植
+ * 白主体固定（ダークモード非対応 — SWELL のダークモードに引きずられない）
+ */
+
+/* ========================================================================
+ * Design Tokens
+ * ======================================================================== */
+.sapjp-popup-backdrop {
+	--popup-bg:          #F7F5F1;
+	--popup-surface:     #FFFFFF;
+	--popup-surface-2:   #FAF8F4;
+	--popup-ink:         #1A1817;
+	--popup-ink-2:       #2B2826;
+	--popup-muted:       #6E6863;
+	--popup-line:        #EAE5DD;
+	--popup-line-2:      #D9D3CA;
+	--popup-accent:      #D97757;
+	--popup-accent-ink:  #7A3E24;
+	--popup-accent-soft: #F4E4D8;
+
+	--popup-shadow:
+		0 40px 100px -20px rgba(26, 24, 23, 0.30),
+		0 20px 40px -12px  rgba(26, 24, 23, 0.12);
+	--popup-shadow-mock: 0 8px 24px rgba(26, 24, 23, 0.08);
+
+	--popup-radius:    20px;
+	--popup-radius-md: 12px;
+	--popup-radius-sm: 10px;
+	--popup-radius-xs: 8px;
+
+	--popup-ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--popup-duration: 420ms;
+
+	--popup-font-jp: "Noto Sans JP", system-ui, -apple-system, sans-serif;
+}
+
+/* ========================================================================
+ * Backdrop
+ * ======================================================================== */
+.sapjp-popup-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	display: grid;
+	place-items: center;
+	padding: 32px;
+	background: rgba(26, 24, 23, 0.28);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 360ms var(--popup-ease);
+
+	color: var(--popup-ink);
+	font-family: var(--popup-font-jp);
+	-webkit-font-smoothing: antialiased;
+}
+
+.sapjp-popup-backdrop.open {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* ========================================================================
+ * Modal (Classic: 480px)
+ * ======================================================================== */
+.sapjp-popup {
+	position: relative;
+	box-sizing: border-box;
+	width: 480px;
+	max-width: 100%;
+	max-height: calc(100vh - 64px);
+	overflow: hidden;
+	background: var(--popup-surface);
+	color: var(--popup-ink);
+	border: 1px solid var(--popup-line);
+	border-radius: var(--popup-radius);
+	box-shadow: var(--popup-shadow);
+	transform: translateY(16px) scale(0.98);
+	opacity: 0;
+	transition:
+		transform var(--popup-duration) var(--popup-ease),
+		opacity 280ms ease;
+	display: flex;
+	flex-direction: column;
+}
+
+.sapjp-popup-backdrop.open .sapjp-popup {
+	transform: translateY(0) scale(1);
+	opacity: 1;
+}
+
+.sapjp-popup *,
+.sapjp-popup *::before,
+.sapjp-popup *::after {
+	box-sizing: border-box;
+}
+
+/* ========================================================================
+ * Close button
+ * ======================================================================== */
+.sapjp-popup__close {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	z-index: 2;
+	width: 32px;
+	height: 32px;
+	display: grid;
+	place-items: center;
+	border-radius: var(--popup-radius-xs);
+	background: rgba(255, 255, 255, 0.7);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+	border: 1px solid var(--popup-line);
+	color: var(--popup-muted);
+	cursor: pointer;
+	padding: 0;
+	transition: color 120ms, background-color 120ms, border-color 120ms;
+}
+
+.sapjp-popup__close:hover {
+	color: var(--popup-ink);
+	background: var(--popup-surface);
+}
+
+.sapjp-popup__close:focus-visible {
+	outline: 2px solid var(--popup-accent);
+	outline-offset: 2px;
+}
+
+.sapjp-popup__close svg {
+	width: 16px;
+	height: 16px;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	fill: none;
+}
+
+/* ========================================================================
+ * Hero + screenshot mockup (CSS で描画)
+ * ======================================================================== */
+.sapjp-popup__hero {
+	height: 220px;
+	background: var(--popup-surface-2);
+	border-bottom: 1px solid var(--popup-line);
+	position: relative;
+	overflow: hidden;
+}
+
+.sapjp-popup__hero-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.sapjp-popup__mock {
+	position: absolute;
+	inset: 28px 28px -1px 28px;
+	padding: 14px;
+	background: var(--popup-surface);
+	border: 1px solid var(--popup-line-2);
+	border-bottom: none;
+	border-radius: var(--popup-radius-md) var(--popup-radius-md) 0 0;
+	box-shadow: var(--popup-shadow-mock);
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.sapjp-popup__mock-dots {
+	display: flex;
+	gap: 5px;
+}
+
+.sapjp-popup__mock-dots span {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--popup-line-2);
+}
+
+.sapjp-popup__mock-line {
+	height: 8px;
+	background: var(--popup-line);
+	border-radius: 4px;
+}
+
+.sapjp-popup__mock-line--w40 { width: 40%; }
+.sapjp-popup__mock-line--w60 { width: 60%; }
+.sapjp-popup__mock-line--w80 { width: 80%; }
+
+.sapjp-popup__mock-line--accent {
+	background: linear-gradient(90deg,
+		var(--popup-accent) 0%,
+		var(--popup-accent) 40%,
+		var(--popup-line) 40%);
+}
+
+.sapjp-popup__mock-box {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px;
+	background: var(--popup-surface-2);
+	border: 1px solid var(--popup-line);
+	border-radius: var(--popup-radius-xs);
+}
+
+.sapjp-popup__mock-box-icon {
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	border-radius: 4px;
+	background: var(--popup-accent);
+}
+
+.sapjp-popup__mock-box-lines {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* ========================================================================
+ * Body
+ * ======================================================================== */
+.sapjp-popup__body {
+	padding: 28px 28px 24px;
+}
+
+.sapjp-popup__pill-row {
+	margin-bottom: 14px;
+}
+
+.sapjp-popup__pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 100px;
+	background: var(--popup-accent-soft);
+	color: var(--popup-accent-ink);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.sapjp-popup__pill-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--popup-accent);
+}
+
+.sapjp-popup__title {
+	margin: 0 0 10px;
+	font-size: 22px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.4;
+	color: var(--popup-ink);
+}
+
+.sapjp-popup__desc {
+	margin: 0 0 20px;
+	font-size: 14px;
+	line-height: 1.7;
+	color: var(--popup-muted);
+}
+
+.sapjp-popup__desc:empty {
+	display: none;
+}
+
+/* ========================================================================
+ * Actions
+ * ======================================================================== */
+.sapjp-popup__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.sapjp-popup__actions-spacer {
+	flex: 1;
+}
+
+.sapjp-popup__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 10px 18px;
+	border-radius: var(--popup-radius-sm);
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.2;
+	white-space: nowrap;
+	cursor: pointer;
+	border: 1px solid transparent;
+	text-decoration: none;
+	transition:
+		background-color 120ms,
+		color 120ms,
+		border-color 120ms,
+		transform 120ms var(--popup-ease);
+}
+
+.sapjp-popup__btn:active {
+	transform: scale(0.98);
+}
+
+.sapjp-popup__btn:focus-visible {
+	outline: 2px solid var(--popup-accent);
+	outline-offset: 2px;
+}
+
+.sapjp-popup__btn--primary {
+	background: var(--popup-ink);
+	color: var(--popup-bg);
+	border-color: var(--popup-ink);
+}
+
+.sapjp-popup__btn--primary:hover {
+	background: var(--popup-ink-2);
+	border-color: var(--popup-ink-2);
+	color: var(--popup-bg);
+}
+
+.sapjp-popup__btn--ghost {
+	background: transparent;
+	color: var(--popup-ink-2);
+	border-color: var(--popup-line-2);
+}
+
+.sapjp-popup__btn--ghost:hover {
+	background: var(--popup-surface-2);
+	color: var(--popup-ink);
+}
+
+.sapjp-popup__btn--text {
+	background: transparent;
+	color: var(--popup-muted);
+	border: none;
+	padding: 10px 12px;
+}
+
+.sapjp-popup__btn--text:hover {
+	color: var(--popup-ink);
+	background: transparent;
+}
+
+/* ========================================================================
+ * Responsive
+ * ======================================================================== */
+@media (max-width: 560px) {
+	.sapjp-popup-backdrop {
+		padding: 16px;
+	}
+	.sapjp-popup {
+		width: 100%;
+	}
+	.sapjp-popup__hero {
+		height: 180px;
+	}
+	.sapjp-popup__mock {
+		inset: 20px 20px -1px 20px;
+	}
+	.sapjp-popup__body {
+		padding: 24px 20px 20px;
+	}
+	.sapjp-popup__title {
+		font-size: 19px;
+	}
+}
+
+@media (max-width: 420px) {
+	.sapjp-popup__actions {
+		flex-wrap: wrap;
+	}
+	.sapjp-popup__actions-spacer {
+		display: none;
+	}
+	.sapjp-popup__btn--ghost,
+	.sapjp-popup__btn--primary {
+		flex: 1;
+	}
+}
+
+/* ========================================================================
+ * Variant: Carded (changelog 形式)
+ * ======================================================================== */
+.sapjp-popup--carded {
+	width: 520px;
+}
+
+.sapjp-popup--carded .sapjp-popup__head {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 24px 28px 20px;
+	border-bottom: 1px solid var(--popup-line);
+}
+
+.sapjp-popup--carded .sapjp-popup__head-icon {
+	flex-shrink: 0;
+	width: 44px;
+	height: 44px;
+	display: grid;
+	place-items: center;
+	border-radius: var(--popup-radius-md);
+	background: var(--popup-accent-soft);
+	color: var(--popup-accent-ink);
+	font-family: Georgia, "Times New Roman", serif;
+	font-style: italic;
+	font-size: 22px;
+	line-height: 1;
+}
+
+.sapjp-popup--carded .sapjp-popup__head-meta {
+	flex: 1;
+	min-width: 0;
+}
+
+.sapjp-popup--carded .sapjp-popup__eyebrow {
+	display: block;
+	margin-bottom: 4px;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 11px;
+	color: var(--popup-muted);
+	letter-spacing: 0.04em;
+}
+
+.sapjp-popup--carded .sapjp-popup__head-title {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.4;
+	color: var(--popup-ink);
+}
+
+.sapjp-popup--carded .sapjp-popup__body {
+	padding: 20px 28px 8px;
+}
+
+.sapjp-popup--carded .sapjp-popup__intro {
+	margin: 0 0 18px;
+	font-size: 13.5px;
+	line-height: 1.7;
+	color: var(--popup-muted);
+}
+
+.sapjp-popup--carded .sapjp-popup__cards {
+	list-style: none;
+	margin: 0 0 20px;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.sapjp-popup--carded .sapjp-popup__card {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+	padding: 14px 16px;
+	border: 1px solid var(--popup-line);
+	border-radius: var(--popup-radius-md);
+	transition: border-color 120ms, background-color 120ms;
+}
+
+.sapjp-popup--carded .sapjp-popup__card:hover {
+	border-color: var(--popup-line-2);
+	background: var(--popup-surface-2);
+}
+
+.sapjp-popup--carded .sapjp-popup__card-icon {
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	display: grid;
+	place-items: center;
+	border-radius: var(--popup-radius-xs);
+	background: var(--popup-surface-2);
+	border: 1px solid var(--popup-line);
+	color: var(--popup-ink-2);
+}
+
+.sapjp-popup--carded .sapjp-popup__card-icon svg {
+	width: 16px;
+	height: 16px;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	fill: none;
+}
+
+.sapjp-popup--carded .sapjp-popup__card-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.sapjp-popup--carded .sapjp-popup__card-title {
+	margin: 0 0 3px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	font-size: 13.5px;
+	font-weight: 600;
+	color: var(--popup-ink);
+}
+
+.sapjp-popup--carded .sapjp-popup__card-desc {
+	margin: 0;
+	font-size: 12.5px;
+	line-height: 1.55;
+	color: var(--popup-muted);
+}
+
+.sapjp-popup--carded .sapjp-popup__new-tag {
+	display: inline-block;
+	padding: 1px 6px;
+	border-radius: 4px;
+	background: var(--popup-accent);
+	color: #FFFFFF;
+	font-size: 9.5px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+
+.sapjp-popup--carded .sapjp-popup__foot {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 16px 28px 24px;
+	background: var(--popup-surface-2);
+	border-top: 1px solid var(--popup-line);
+}
+
+.sapjp-popup--carded .sapjp-popup__version-link {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 12px;
+	color: var(--popup-muted);
+	text-decoration: none;
+}
+
+.sapjp-popup--carded .sapjp-popup__version-link[href]:hover {
+	color: var(--popup-ink);
+	text-decoration: underline;
+}
+
+.sapjp-popup--carded .sapjp-popup__foot-spacer {
+	flex: 1;
+}
+
+/* ========================================================================
+ * Variant: Playful (抽象シェイプ + 大見出し)
+ * ======================================================================== */
+.sapjp-popup--playful {
+	width: 500px;
+	border-radius: 24px;
+}
+
+.sapjp-popup--playful .sapjp-popup__hero {
+	height: 200px;
+	background: linear-gradient(135deg, #F0EAD9 0%, #E8D4B9 100%);
+	display: grid;
+	place-items: center;
+	position: relative;
+	overflow: hidden;
+}
+
+.sapjp-popup--playful .sapjp-popup__shapes {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.sapjp-popup--playful .sapjp-popup__shape {
+	position: absolute;
+	display: block;
+	will-change: transform;
+}
+
+.sapjp-popup--playful .sapjp-popup__shape--s1 {
+	width: 60px;
+	height: 60px;
+	top: 20px;
+	left: 40px;
+	border-radius: 50%;
+	background: var(--popup-accent);
+	animation: sapjp-popup-float 6s ease-in-out infinite;
+}
+
+.sapjp-popup--playful .sapjp-popup__shape--s2 {
+	width: 36px;
+	height: 36px;
+	top: 70px;
+	right: 60px;
+	border-radius: 50%;
+	background: #D4A56A;
+	animation: sapjp-popup-float 6s ease-in-out infinite 1s;
+}
+
+.sapjp-popup--playful .sapjp-popup__shape--s3 {
+	width: 90px;
+	height: 90px;
+	bottom: -30px;
+	left: 60%;
+	border-radius: 50%;
+	background: transparent;
+	border: 2px solid var(--popup-accent);
+	animation: sapjp-popup-float 8s ease-in-out infinite 0.5s;
+}
+
+.sapjp-popup--playful .sapjp-popup__shape--s4 {
+	width: 20px;
+	height: 20px;
+	top: 40px;
+	right: 40%;
+	border-radius: 50%;
+	background: var(--popup-ink);
+	animation: sapjp-popup-float 5s ease-in-out infinite 1.5s;
+}
+
+.sapjp-popup--playful .sapjp-popup__shape--s5 {
+	width: 80px;
+	height: 80px;
+	bottom: 30px;
+	left: 30px;
+	border-radius: 16px;
+	background: #E3DA98;
+	transform: rotate(15deg);
+	animation: sapjp-popup-float 7s ease-in-out infinite 0.8s;
+}
+
+@keyframes sapjp-popup-float {
+	0%, 100% { transform: translateY(0) rotate(0); }
+	50%      { transform: translateY(-12px) rotate(0); }
+}
+
+.sapjp-popup--playful .sapjp-popup__shape--s5 {
+	animation-name: sapjp-popup-float-rotated;
+}
+
+@keyframes sapjp-popup-float-rotated {
+	0%, 100% { transform: translateY(0) rotate(15deg); }
+	50%      { transform: translateY(-12px) rotate(15deg); }
+}
+
+.sapjp-popup--playful .sapjp-popup__hero-text {
+	position: relative;
+	z-index: 1;
+	text-align: center;
+	padding: 0 16px;
+}
+
+.sapjp-popup--playful .sapjp-popup__hero-sup {
+	display: block;
+	margin-bottom: 4px;
+	font-family: var(--popup-font-jp);
+	font-size: 13px;
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--popup-accent-ink);
+}
+
+.sapjp-popup--playful .sapjp-popup__hero-title {
+	font-family: Georgia, "Times New Roman", serif;
+	font-style: italic;
+	font-size: 52px;
+	line-height: 1.1;
+	letter-spacing: -0.03em;
+	color: var(--popup-ink);
+}
+
+.sapjp-popup--playful .sapjp-popup__body {
+	padding: 28px 28px 24px;
+	text-align: center;
+}
+
+.sapjp-popup--playful .sapjp-popup__pill-row {
+	margin-bottom: 14px;
+}
+
+.sapjp-popup--playful .sapjp-popup__title {
+	margin: 0 0 12px;
+	font-size: 22px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.4;
+	color: var(--popup-ink);
+}
+
+.sapjp-popup--playful .sapjp-popup__desc {
+	margin: 0 0 22px;
+	padding: 0 4px;
+	font-size: 14px;
+	line-height: 1.75;
+	color: var(--popup-muted);
+}
+
+.sapjp-popup--playful .sapjp-popup__actions {
+	justify-content: center;
+	gap: 8px;
+}
+
+.sapjp-popup--playful .sapjp-popup__actions-spacer {
+	display: none;
+}
+
+.sapjp-popup--playful .sapjp-popup__tag-row {
+	display: flex;
+	justify-content: center;
+	gap: 6px;
+	margin-top: 18px;
+	padding-top: 18px;
+	border-top: 1px solid var(--popup-line);
+	flex-wrap: wrap;
+}
+
+.sapjp-popup--playful .sapjp-popup__mini-tag {
+	padding: 3px 8px;
+	border: 1px solid var(--popup-line);
+	border-radius: 100px;
+	background: var(--popup-surface-2);
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 10.5px;
+	color: var(--popup-muted);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	.sapjp-popup-backdrop,
+	.sapjp-popup,
+	.sapjp-popup__btn,
+	.sapjp-popup__close {
+		transition-duration: 1ms !important;
+	}
+	.sapjp-popup {
+		transform: none;
+	}
+	.sapjp-popup--playful .sapjp-popup__shape {
+		animation: none !important;
+	}
+}
+
+/* ========================================================================
+ * Responsive tweaks for new variants
+ * ======================================================================== */
+@media (max-width: 560px) {
+	.sapjp-popup--carded,
+	.sapjp-popup--playful {
+		width: 100%;
+	}
+	.sapjp-popup--carded .sapjp-popup__head {
+		padding: 20px 20px 16px;
+	}
+	.sapjp-popup--carded .sapjp-popup__body {
+		padding: 16px 20px 4px;
+	}
+	.sapjp-popup--carded .sapjp-popup__foot {
+		padding: 12px 20px 20px;
+	}
+	.sapjp-popup--playful .sapjp-popup__hero {
+		height: 170px;
+	}
+	.sapjp-popup--playful .sapjp-popup__hero-title {
+		font-size: 40px;
+	}
+	.sapjp-popup--playful .sapjp-popup__body {
+		padding: 22px 20px 20px;
+	}
+}
