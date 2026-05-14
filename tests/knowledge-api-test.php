@@ -144,11 +144,11 @@ $empty_context = sapjp_knowledge_rest_context( new Sapjp_Test_Request( array( 'q
 assert_true( $empty_context instanceof WP_Error, 'Context endpoint should reject effectively empty queries.' );
 assert_same( 'sapjp_empty_query', $empty_context->code, 'Context endpoint should use a stable error code for empty queries.' );
 
-$json_options = sapjp_knowledge_rest_json_encode_options( 0, null, new Sapjp_Test_Request( array( 'rest_route' => '/sapjp/v1/articles/2155' ) ) );
+$json_options = sapjp_knowledge_rest_json_encode_options( 0, new Sapjp_Test_Request( array( 'rest_route' => '/sapjp/v1/articles/2155' ) ) );
 assert_true( (bool) ( $json_options & JSON_UNESCAPED_UNICODE ), 'Knowledge API JSON should keep Japanese readable.' );
 assert_true( (bool) ( $json_options & JSON_UNESCAPED_SLASHES ), 'Knowledge API JSON should keep URLs readable.' );
 
-$json_options_from_route = sapjp_knowledge_rest_json_encode_options( 0, null, new Sapjp_Test_Request( array( 'route' => '/sapjp/v1/context' ) ) );
+$json_options_from_route = sapjp_knowledge_rest_json_encode_options( 0, new Sapjp_Test_Request( array( 'route' => '/sapjp/v1/context' ) ) );
 assert_true( (bool) ( $json_options_from_route & JSON_UNESCAPED_UNICODE ), 'Knowledge API JSON should detect normal REST routes.' );
 
 echo "knowledge-api tests passed\n";
