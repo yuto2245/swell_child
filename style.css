@@ -575,27 +575,71 @@ body {
   margin: 0;
 }
 
-/* CTAボタン（ライトガラス風） */
-.hero-cta {
-  display: inline-block;
+/* ヒーローコマンド（API導線） */
+.hero-command {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 560px);
+  min-height: 48px;
   margin-top: var(--space-ms);
-  padding: var(--space-xs) var(--space-ms);
-  font-size: var(--text-sm);
-  font-weight: 500;
+  padding: 0 16px;
+  border: 1px solid rgba(29, 29, 31, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
   color: var(--color-text);
   text-decoration: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: background 0.3s var(--ease-out-expo), border-color 0.3s var(--ease-out-expo);
+  box-shadow: 0 18px 50px rgba(29, 29, 31, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background 0.3s var(--ease-out-expo), border-color 0.3s var(--ease-out-expo), transform 0.3s var(--ease-out-expo);
 }
 
-.hero-cta:hover {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: var(--color-text-muted);
+.hero-command:hover {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(29, 29, 31, 0.24);
   color: var(--color-text);
+  transform: translateY(-1px);
+}
+
+.hero-command__prompt {
+  flex: 0 0 auto;
+  color: #c15f3c;
+  font-family: var(--code-font);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hero-command__text {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-family: var(--code-font);
+  font-size: 13px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-command__cursor {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 16px;
+  background: var(--color-text);
+  opacity: 0.75;
+  animation: hero-command-blink 1s steps(2, start) infinite;
+}
+
+@keyframes hero-command-blink {
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-command,
+  .hero-command__cursor {
+    animation: none;
+    transition: none;
+  }
 }
 
 /* ============================================================
