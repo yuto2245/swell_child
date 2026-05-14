@@ -535,6 +535,7 @@ add_action( 'wp_enqueue_scripts', function () {
  * ======================================================================== */
 
 require_once get_stylesheet_directory() . '/inc/popup-cpt.php';
+require_once get_stylesheet_directory() . '/inc/knowledge-api.php';
 
 /**
  * フロント配信判定：配信対象 or プレビュー対象を返す
