@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) && ! defined( 'SAPJP_KNOWLEDGE_API_TESTING' ) ) {
 
 if ( defined( 'ABSPATH' ) ) {
 	add_action( 'rest_api_init', 'sapjp_knowledge_register_routes' );
-	add_filter( 'rest_json_encode_options', 'sapjp_knowledge_rest_json_encode_options', 10, 3 );
+	add_filter( 'rest_json_encode_options', 'sapjp_knowledge_rest_json_encode_options', 10, 2 );
 }
 
 /**
@@ -90,11 +90,10 @@ function sapjp_knowledge_register_routes() {
  * Keep Knowledge API JSON readable for command-line users.
  *
  * @param int                  $options JSON encode options.
- * @param mixed                $result REST response data.
  * @param WP_REST_Request|null $request REST request.
  * @return int
  */
-function sapjp_knowledge_rest_json_encode_options( $options, $result = null, $request = null ) {
+function sapjp_knowledge_rest_json_encode_options( $options, $request = null ) {
 	if ( ! is_object( $request ) || ! method_exists( $request, 'get_param' ) ) {
 		return $options;
 	}
