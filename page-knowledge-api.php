@@ -64,7 +64,7 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 					<span>JavaScript</span>
 					<span>MCP</span>
 				</div>
-				<pre><code>curl "<?php echo esc_html( $api_base ); ?>/context?query=ABAP%20SELECT%20SINGLE"</code></pre>
+				<pre><code>curl "<?php echo esc_html( $api_base ); ?>/context?query=ABAP"</code></pre>
 			</div>
 		</section>
 

@@ -194,7 +194,7 @@ body.sapjp-docs-page {
   display: block;
   padding: 8px 10px;
   border-radius: 7px;
-  color: var(--docs-muted);
+  color: #67645e;
   text-decoration: none;
   font-size: 13px;
   line-height: 1.35;
@@ -207,15 +207,15 @@ body.sapjp-docs-page {
 
 .sapjp-docs__content {
   width: min(100%, 1180px);
-  padding: 48px 56px 96px;
+  padding: 44px 64px 96px;
 }
 
 .sapjp-docs__hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.84fr) minmax(420px, 0.86fr);
-  gap: 42px;
+  grid-template-columns: minmax(0, 0.78fr) minmax(460px, 0.92fr);
+  gap: 36px;
   align-items: start;
-  padding-bottom: 54px;
+  padding-bottom: 42px;
   border-bottom: 1px solid var(--docs-border);
 }
 
@@ -263,7 +263,7 @@ body.sapjp-docs-page {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 30px;
+  margin-top: 26px;
 }
 
 .sapjp-docs__button {
@@ -288,7 +288,7 @@ body.sapjp-docs-page {
 }
 
 .sapjp-docs__section {
-  padding: 46px 0;
+  padding: 40px 0;
   border-bottom: 1px solid var(--docs-border);
 }
 
@@ -371,7 +371,7 @@ body.sapjp-docs-page {
 
 .sapjp-docs__hero-code {
   overflow: hidden;
-  margin-top: 8px;
+  margin-top: 4px;
   border: 1px solid #282824;
   border-radius: 12px;
   background: var(--docs-code);
@@ -381,7 +381,7 @@ body.sapjp-docs-page {
 .sapjp-docs__hero-code pre {
   overflow-x: auto;
   margin: 0;
-  padding: 22px;
+  padding: 20px 22px;
   white-space: pre;
 }
 
@@ -528,7 +528,7 @@ body.sapjp-docs-page {
   }
 
   .sapjp-docs__content {
-    padding: 48px 22px 72px;
+    padding: 44px 22px 72px;
   }
 
   .sapjp-docs__grid,
