@@ -8,10 +8,16 @@
  * @package swell_child
  */
 
-get_header();
-
 $api_base = home_url( '/wp-json/sapjp/v1' );
 ?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+<meta charset="<?php bloginfo( 'charset' ); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<?php wp_head(); ?>
+</head>
+<body <?php body_class( 'sapjp-docs-page' ); ?>>
 
 <main class="sapjp-docs">
 	<aside class="sapjp-docs__sidebar" aria-label="Knowledge API navigation">
@@ -41,8 +47,8 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 	<div class="sapjp-docs__content">
 		<section id="overview" class="sapjp-docs__hero">
 			<div class="sapjp-docs__hero-copy">
-				<p class="sapjp-docs__eyebrow">SAPJP Knowledge API</p>
-				<h1>Get started with SAPJP Knowledge API</h1>
+				<p class="sapjp-docs__eyebrow">Get started</p>
+				<h1>SAPJP Knowledge API</h1>
 				<p class="sapjp-docs__lead">
 					sapjp.net の公開記事を検索し、MCPサーバーや外部AIアプリに渡しやすいJSONとして返します。
 					WordPressをチャット基盤にせず、記事資産だけを安全に参照するためのAPIです。
@@ -223,4 +229,7 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 </main>
 
 <?php
-get_footer();
+wp_footer();
+?>
+</body>
+</html>

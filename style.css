@@ -103,16 +103,18 @@
   font-family: var(--font-main);
 }
 
-body.page-template-page-knowledge-api .l-header,
-body.page-template-page-knowledge-api .l-fixHeader,
-body.page-template-page-knowledge-api .p-breadcrumb,
-body.page-template-page-knowledge-api .l-footer,
-body.page-template-page-knowledge-api .p-fixBtnWrap {
+body.sapjp-docs-page .l-header,
+body.sapjp-docs-page .l-fixHeader,
+body.sapjp-docs-page .p-breadcrumb,
+body.sapjp-docs-page .l-footer,
+body.sapjp-docs-page .p-fixBtnWrap,
+body.sapjp-docs-page #wpadminbar {
   display: none;
 }
 
-body.page-template-page-knowledge-api #content {
-  padding-top: 0;
+body.sapjp-docs-page {
+  margin: 0;
+  background: var(--docs-bg);
 }
 
 .sapjp-docs__sidebar {
@@ -210,7 +212,7 @@ body.page-template-page-knowledge-api #content {
 
 .sapjp-docs__hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(420px, 0.78fr);
+  grid-template-columns: minmax(0, 0.84fr) minmax(420px, 0.86fr);
   gap: 42px;
   align-items: start;
   padding-bottom: 54px;
@@ -238,7 +240,7 @@ body.page-template-page-knowledge-api #content {
 
 .sapjp-docs h1 {
   max-width: 760px;
-  font-size: clamp(42px, 5vw, 64px);
+  font-size: clamp(44px, 5.4vw, 72px);
   line-height: 1.02;
   font-weight: 650;
 }
