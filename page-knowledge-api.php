@@ -48,10 +48,10 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 		<section id="overview" class="sapjp-docs__hero">
 			<div class="sapjp-docs__hero-copy">
 				<p class="sapjp-docs__eyebrow">Get started</p>
-				<h1>SAPJP Knowledge API</h1>
+				<h1>Get started with SAPJP</h1>
 				<p class="sapjp-docs__lead">
-					sapjp.net の公開記事を検索し、MCPサーバーや外部AIアプリに渡しやすいJSONとして返します。
-					WordPressをチャット基盤にせず、記事資産だけを安全に参照するためのAPIです。
+					公開記事を検索し、MCPサーバーや外部AIアプリに渡しやすいJSONとして返します。
+					SAPとABAPの記事資産を、安全に参照できる知識APIです。
 				</p>
 				<div class="sapjp-docs__actions">
 					<a class="sapjp-docs__button" href="#quickstart">Get Started</a>
@@ -68,24 +68,42 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 			</div>
 		</section>
 
-		<section id="quickstart" class="sapjp-docs__section sapjp-docs__grid" aria-label="API summary">
+		<section id="quickstart" class="sapjp-docs__section">
+			<div class="sapjp-docs__section-head">
+				<p class="sapjp-docs__eyebrow">Knowledge APIs</p>
+				<h2>Build with article context</h2>
+			</div>
+			<div class="sapjp-docs__grid" aria-label="API summary">
 			<div class="sapjp-docs__card">
 				<p class="sapjp-docs__card-label">Search</p>
-				<h2>Article Search</h2>
+				<h2>Search API</h2>
 				<p>ABAP、SAP、S/4HANAなどのキーワードで関連記事を取得します。</p>
+				<dl class="sapjp-docs__meta">
+					<div><dt>Method</dt><dd>GET</dd></div>
+					<div><dt>Limit</dt><dd>20 results</dd></div>
+				</dl>
 				<a href="#search">Read docs</a>
 			</div>
 			<div class="sapjp-docs__card">
 				<p class="sapjp-docs__card-label">Retrieve</p>
 				<h2>Article API</h2>
 				<p>記事IDからタイトル、URL、本文、カテゴリ、タグを取得します。</p>
+				<dl class="sapjp-docs__meta">
+					<div><dt>Method</dt><dd>GET</dd></div>
+					<div><dt>Returns</dt><dd>Full text</dd></div>
+				</dl>
 				<a href="#article">Read docs</a>
 			</div>
 			<div class="sapjp-docs__card">
 				<p class="sapjp-docs__card-label">Context</p>
 				<h2>AI Context</h2>
 				<p>AIに渡しやすい短いコンテキストとして複数記事をまとめます。</p>
+				<dl class="sapjp-docs__meta">
+					<div><dt>Method</dt><dd>GET</dd></div>
+					<div><dt>Use</dt><dd>MCP / RAG</dd></div>
+				</dl>
 				<a href="#context">Read docs</a>
+			</div>
 			</div>
 		</section>
 

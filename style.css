@@ -211,16 +211,13 @@ body.sapjp-docs-page {
 }
 
 .sapjp-docs__hero {
-  display: grid;
-  grid-template-columns: minmax(440px, 0.92fr) minmax(400px, 0.82fr);
-  gap: 32px;
-  align-items: start;
+  display: block;
   padding-bottom: 42px;
   border-bottom: 1px solid var(--docs-border);
 }
 
 .sapjp-docs__hero-copy {
-  max-width: 710px;
+  max-width: 760px;
 }
 
 .sapjp-docs__eyebrow {
@@ -239,8 +236,8 @@ body.sapjp-docs-page {
 }
 
 .sapjp-docs h1 {
-  max-width: 760px;
-  font-size: clamp(42px, 4.7vw, 60px);
+  max-width: 900px;
+  font-size: clamp(46px, 6vw, 78px);
   line-height: 1.04;
   font-weight: 650;
 }
@@ -252,10 +249,10 @@ body.sapjp-docs-page {
 }
 
 .sapjp-docs__lead {
-  max-width: 690px;
+  max-width: 740px;
   margin: 22px 0 0;
   color: var(--docs-muted);
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.75;
 }
 
@@ -304,7 +301,7 @@ body.sapjp-docs-page {
 }
 
 .sapjp-docs__card {
-  min-height: 190px;
+  min-height: 245px;
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -329,6 +326,38 @@ body.sapjp-docs-page {
 .sapjp-docs__section p {
   color: var(--docs-muted);
   line-height: 1.75;
+}
+
+.sapjp-docs__meta {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0 22px;
+}
+
+.sapjp-docs__meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--docs-border);
+}
+
+.sapjp-docs__meta dt,
+.sapjp-docs__meta dd {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.sapjp-docs__meta dt {
+  color: var(--docs-faint);
+  font-weight: 650;
+}
+
+.sapjp-docs__meta dd {
+  color: var(--docs-text);
+  font-weight: 650;
+  text-align: right;
 }
 
 .sapjp-docs__card a {
@@ -371,7 +400,8 @@ body.sapjp-docs-page {
 
 .sapjp-docs__hero-code {
   overflow: hidden;
-  margin-top: 4px;
+  width: min(100%, 860px);
+  margin-top: 34px;
   border: 1px solid #282824;
   border-radius: 12px;
   background: var(--docs-code);
@@ -387,7 +417,7 @@ body.sapjp-docs-page {
 
 .sapjp-docs__hero-code code {
   color: var(--docs-code-text);
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.7;
 }
 
