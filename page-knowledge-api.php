@@ -17,48 +17,69 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 	<aside class="sapjp-docs__sidebar" aria-label="Knowledge API navigation">
 		<a class="sapjp-docs__brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<span class="sapjp-docs__mark" aria-hidden="true">S</span>
-			<span>SAPJP Docs</span>
+			<span>Docs</span>
 		</a>
+		<div class="sapjp-docs__search" aria-hidden="true">
+			<span>Search</span>
+			<kbd>/</kbd>
+		</div>
 		<nav class="sapjp-docs__nav">
-			<a href="#overview">Overview</a>
-			<a href="#endpoints">Endpoints</a>
-			<a href="#search">Search</a>
-			<a href="#article">Article</a>
-			<a href="#context">Context</a>
+			<p>Get Started</p>
+			<a href="#overview">Welcome</a>
+			<a href="#quickstart">Quickstart</a>
+			<a href="#endpoints">API reference</a>
+			<p>Knowledge</p>
+			<a href="#search">Search articles</a>
+			<a href="#article">Retrieve article</a>
+			<a href="#context">Context for AI</a>
+			<p>Resources</p>
 			<a href="#safety">Safety</a>
-			<a href="#next">Next</a>
+			<a href="#next">MCP roadmap</a>
 		</nav>
 	</aside>
 
 	<div class="sapjp-docs__content">
 		<section id="overview" class="sapjp-docs__hero">
-			<p class="sapjp-docs__eyebrow">SAPJP Knowledge API</p>
-			<h1>WordPressの記事を、AIが読める知識ソースにする。</h1>
-			<p class="sapjp-docs__lead">
-				このAPIは sapjp.net の公開記事を検索し、MCPサーバーや外部AIアプリに渡しやすいJSONとして返します。
-				チャット本体をWordPressで運用せず、記事資産だけを安全に参照するための入口です。
-			</p>
-			<div class="sapjp-docs__actions">
-				<a class="sapjp-docs__button" href="#endpoints">View endpoints</a>
-				<a class="sapjp-docs__button sapjp-docs__button--ghost" href="<?php echo esc_url( $api_base . '/search?query=ABAP' ); ?>">Try search</a>
+			<div class="sapjp-docs__hero-copy">
+				<p class="sapjp-docs__eyebrow">SAPJP Knowledge API</p>
+				<h1>Get started with SAPJP Knowledge API</h1>
+				<p class="sapjp-docs__lead">
+					sapjp.net の公開記事を検索し、MCPサーバーや外部AIアプリに渡しやすいJSONとして返します。
+					WordPressをチャット基盤にせず、記事資産だけを安全に参照するためのAPIです。
+				</p>
+				<div class="sapjp-docs__actions">
+					<a class="sapjp-docs__button" href="#quickstart">Get Started</a>
+					<a class="sapjp-docs__button sapjp-docs__button--ghost" href="<?php echo esc_url( $api_base . '/search?query=ABAP' ); ?>">Try API</a>
+				</div>
+			</div>
+			<div class="sapjp-docs__hero-code">
+				<div class="sapjp-docs__tabs" aria-hidden="true">
+					<span class="is-active">cURL</span>
+					<span>JavaScript</span>
+					<span>MCP</span>
+				</div>
+				<pre><code>curl "<?php echo esc_html( $api_base ); ?>/context?query=ABAP%20SELECT%20SINGLE"</code></pre>
 			</div>
 		</section>
 
-		<section class="sapjp-docs__section sapjp-docs__grid" aria-label="API summary">
+		<section id="quickstart" class="sapjp-docs__section sapjp-docs__grid" aria-label="API summary">
 			<div class="sapjp-docs__card">
-				<p class="sapjp-docs__card-label">Use case</p>
-				<h2>記事検索</h2>
+				<p class="sapjp-docs__card-label">Search</p>
+				<h2>Article Search</h2>
 				<p>ABAP、SAP、S/4HANAなどのキーワードで関連記事を取得します。</p>
+				<a href="#search">Read docs</a>
 			</div>
 			<div class="sapjp-docs__card">
-				<p class="sapjp-docs__card-label">Use case</p>
-				<h2>本文取得</h2>
+				<p class="sapjp-docs__card-label">Retrieve</p>
+				<h2>Article API</h2>
 				<p>記事IDからタイトル、URL、本文、カテゴリ、タグを取得します。</p>
+				<a href="#article">Read docs</a>
 			</div>
 			<div class="sapjp-docs__card">
-				<p class="sapjp-docs__card-label">Use case</p>
-				<h2>AI文脈生成</h2>
+				<p class="sapjp-docs__card-label">Context</p>
+				<h2>AI Context</h2>
 				<p>AIに渡しやすい短いコンテキストとして複数記事をまとめます。</p>
+				<a href="#context">Read docs</a>
 			</div>
 		</section>
 

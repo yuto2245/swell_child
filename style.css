@@ -85,16 +85,19 @@
    SAPJP Knowledge API Docs
 ============================================================ */
 .sapjp-docs {
-  --docs-bg: #f7f7f4;
+  --docs-bg: #fbfbfa;
+  --docs-sidebar: #f5f5f3;
   --docs-panel: #ffffff;
-  --docs-text: #111111;
-  --docs-muted: #6f6f68;
-  --docs-border: #e5e2dc;
-  --docs-code: #171717;
-  --docs-code-text: #f2f2ed;
+  --docs-text: #0f0f0f;
+  --docs-muted: #74716b;
+  --docs-faint: #9b9891;
+  --docs-border: #e7e5df;
+  --docs-border-strong: #d8d5ce;
+  --docs-code: #111111;
+  --docs-code-text: #f4f2ec;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  grid-template-columns: 268px minmax(0, 1fr);
   background: var(--docs-bg);
   color: var(--docs-text);
   font-family: var(--font-main);
@@ -104,9 +107,10 @@
   position: sticky;
   top: 0;
   height: 100vh;
-  padding: 28px 22px;
+  padding: 22px 18px;
   border-right: 1px solid var(--docs-border);
-  background: rgba(247, 247, 244, 0.92);
+  background: var(--docs-sidebar);
+  overflow-y: auto;
 }
 
 .sapjp-docs__brand {
@@ -116,7 +120,7 @@
   color: var(--docs-text);
   text-decoration: none;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 680;
 }
 
 .sapjp-docs__mark {
@@ -124,16 +128,52 @@
   place-items: center;
   width: 28px;
   height: 28px;
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--docs-text);
   color: var(--docs-panel);
   font-size: 13px;
 }
 
+.sapjp-docs__search {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  margin-top: 22px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--docs-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--docs-muted);
+  font-size: 13px;
+}
+
+.sapjp-docs__search kbd {
+  min-width: 22px;
+  padding: 2px 6px;
+  border: 1px solid var(--docs-border-strong);
+  border-radius: 5px;
+  background: #f8f8f6;
+  color: var(--docs-faint);
+  font-family: var(--code-font);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
 .sapjp-docs__nav {
   display: grid;
   gap: 2px;
-  margin-top: 34px;
+  margin-top: 26px;
+}
+
+.sapjp-docs__nav p {
+  margin: 22px 10px 7px;
+  color: var(--docs-faint);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .sapjp-docs__nav a {
@@ -143,23 +183,30 @@
   color: var(--docs-muted);
   text-decoration: none;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .sapjp-docs__nav a:hover {
-  background: #ededE8;
+  background: #ecebe7;
   color: var(--docs-text);
 }
 
 .sapjp-docs__content {
-  width: min(100%, 1060px);
-  padding: 72px 48px 96px;
+  width: min(100%, 1180px);
+  padding: 48px 56px 96px;
 }
 
 .sapjp-docs__hero {
-  max-width: 780px;
-  padding-bottom: 56px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.98fr) minmax(360px, 0.82fr);
+  gap: 34px;
+  align-items: start;
+  padding-bottom: 54px;
   border-bottom: 1px solid var(--docs-border);
+}
+
+.sapjp-docs__hero-copy {
+  max-width: 710px;
 }
 
 .sapjp-docs__eyebrow {
@@ -179,8 +226,8 @@
 
 .sapjp-docs h1 {
   max-width: 760px;
-  font-size: clamp(42px, 6vw, 76px);
-  line-height: 0.98;
+  font-size: clamp(42px, 5.3vw, 68px);
+  line-height: 1.02;
   font-weight: 650;
 }
 
@@ -192,9 +239,9 @@
 
 .sapjp-docs__lead {
   max-width: 690px;
-  margin: 24px 0 0;
+  margin: 22px 0 0;
   color: var(--docs-muted);
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.75;
 }
 
@@ -212,7 +259,7 @@
   min-height: 40px;
   padding: 0 16px;
   border: 1px solid var(--docs-text);
-  border-radius: 7px;
+  border-radius: 8px;
   background: var(--docs-text);
   color: var(--docs-panel);
   text-decoration: none;
@@ -227,7 +274,7 @@
 }
 
 .sapjp-docs__section {
-  padding: 56px 0;
+  padding: 46px 0;
   border-bottom: 1px solid var(--docs-border);
 }
 
@@ -239,15 +286,18 @@
 .sapjp-docs__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .sapjp-docs__card {
-  min-height: 180px;
-  padding: 22px;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
   border: 1px solid var(--docs-border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--docs-panel);
+  box-shadow: 0 1px 0 rgba(15, 15, 15, 0.02);
 }
 
 .sapjp-docs__card-label {
@@ -258,13 +308,21 @@
 }
 
 .sapjp-docs__card h2 {
-  font-size: 21px;
+  font-size: 20px;
 }
 
 .sapjp-docs__card p:last-child,
 .sapjp-docs__section p {
   color: var(--docs-muted);
   line-height: 1.75;
+}
+
+.sapjp-docs__card a {
+  margin-top: auto;
+  color: var(--docs-text);
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
 }
 
 .sapjp-docs__split {
@@ -292,8 +350,49 @@
 .sapjp-docs__code {
   overflow: hidden;
   border: 1px solid #2d2d2a;
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--docs-code);
+  color: var(--docs-code-text);
+}
+
+.sapjp-docs__hero-code {
+  overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid #282824;
+  border-radius: 12px;
+  background: var(--docs-code);
+  box-shadow: 0 24px 80px rgba(15, 15, 15, 0.14);
+}
+
+.sapjp-docs__hero-code pre {
+  overflow-x: auto;
+  margin: 0;
+  padding: 22px;
+}
+
+.sapjp-docs__hero-code code {
+  color: var(--docs-code-text);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.sapjp-docs__tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sapjp-docs__tabs span {
+  padding: 5px 9px;
+  border-radius: 7px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.sapjp-docs__tabs .is-active {
+  background: rgba(255, 255, 255, 0.1);
   color: var(--docs-code-text);
 }
 
@@ -321,7 +420,7 @@
 .sapjp-docs__table-wrap {
   overflow-x: auto;
   border: 1px solid var(--docs-border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--docs-panel);
 }
 
@@ -352,8 +451,8 @@
 .sapjp-docs__callout {
   padding: 22px 24px;
   border: 1px solid var(--docs-border);
-  border-radius: 8px;
-  background: #fffdf7;
+  border-radius: 10px;
+  background: #fffdf5;
 }
 
 .sapjp-docs__callout p {
@@ -372,7 +471,7 @@
   align-items: start;
   padding: 16px;
   border: 1px solid var(--docs-border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--docs-panel);
 }
 
@@ -418,8 +517,13 @@
   }
 
   .sapjp-docs__grid,
-  .sapjp-docs__split {
+  .sapjp-docs__split,
+  .sapjp-docs__hero {
     grid-template-columns: 1fr;
+  }
+
+  .sapjp-docs__search {
+    display: none;
   }
 }
 
