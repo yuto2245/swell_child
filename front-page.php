@@ -31,9 +31,16 @@ get_header(); // Swellのヘッダー
                     SAPは世界中の企業を支える基幹システムです。SAP-JPは、SAPプロフェッショナルのキャリア形成と最新技術の実践的な情報をお届けします。
                 </p>
                 <a href="<?php echo esc_url(home_url('/api')); ?>" class="hero-command" aria-label="APIドキュメントでコマンド実行例を見る">
-                    <span class="hero-command__prompt" aria-hidden="true">$</span>
-                    <code class="hero-command__text">curl https://sapjp.net/wp-json/sapjp/v1/context?query=ABAP</code>
-                    <span class="hero-command__cursor" aria-hidden="true"></span>
+                    <code class="hero-command__text">
+                        <span class="hero-command__muted">curl</span>
+                        <span class="hero-command__url">https://sapjp.net/wp-json/sapjp/v1/context?query=ABAP</span>
+                    </code>
+                    <span class="hero-command__copy" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+                            <path d="M5 15V6.5A1.5 1.5 0 0 1 6.5 5H15"></path>
+                        </svg>
+                    </span>
                 </a>
             </div>
         </div>
