@@ -212,8 +212,8 @@ body.sapjp-docs-page {
 
 .sapjp-docs__hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(460px, 0.92fr);
-  gap: 36px;
+  grid-template-columns: minmax(440px, 0.92fr) minmax(400px, 0.82fr);
+  gap: 32px;
   align-items: start;
   padding-bottom: 42px;
   border-bottom: 1px solid var(--docs-border);
@@ -240,8 +240,8 @@ body.sapjp-docs-page {
 
 .sapjp-docs h1 {
   max-width: 760px;
-  font-size: clamp(44px, 5.4vw, 72px);
-  line-height: 1.02;
+  font-size: clamp(42px, 4.7vw, 60px);
+  line-height: 1.04;
   font-weight: 650;
 }
 
