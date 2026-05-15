@@ -26,7 +26,7 @@ add_filter( 'swell_parts_head_logo', function( $html, $is_fixbar ) {
 	$home_url  = home_url( '/' );
 
 	$svg = '<svg class="c-siteLogo__icon" viewBox="0 0 44 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor">'
-		. '<path fill-rule="evenodd" clip-rule="evenodd" d="'
+		. '<path class="c-siteLogo__mark" fill-rule="evenodd" clip-rule="evenodd" d="'
 		. 'M9 0C4.029 0 0 4.029 0 9V23C0 27.971 4.029 32 9 32H35C39.971 32 44 27.971 44 23V9C44 4.029 39.971 0 35 0H9Z'
 		. 'M14 7C11.239 7 9 9.239 9 12V20C9 22.761 11.239 25 14 25H30C32.761 25 35 22.761 35 20V12C35 9.239 32.761 7 30 7H14Z'
 		. '"/>'
@@ -63,6 +63,12 @@ add_action('wp_enqueue_scripts', function() {
 	if ( is_front_page() ) {
 		$js_timestamp = date( 'Ymdgis', filemtime( get_stylesheet_directory() . '/js/front-page.js' ) );
 		wp_enqueue_script( 'front-page-js', get_stylesheet_directory_uri() . '/js/front-page.js', [], $js_timestamp, true );
+	}
+
+	$header_js_path = get_stylesheet_directory() . '/js/header-scroll.js';
+	if ( file_exists( $header_js_path ) ) {
+		$header_js_timestamp = date( 'Ymdgis', filemtime( $header_js_path ) );
+		wp_enqueue_script( 'header-scroll-js', get_stylesheet_directory_uri() . '/js/header-scroll.js', [], $header_js_timestamp, true );
 	}
 
 	/* Prism.js シンタックスハイライト（記事ページ） */

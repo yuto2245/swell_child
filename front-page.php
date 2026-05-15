@@ -42,6 +42,16 @@ get_header(); // Swellのヘッダー
                         </svg>
                     </span>
                 </a>
+                <div class="hero-video" aria-label="SAPJP Knowledge APIのターミナル実行デモ">
+                    <video
+                        class="hero-video__media"
+                        src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/videos/sapjp-terminal-api-demo.mp4"
+                        muted
+                        autoplay
+                        loop
+                        playsinline
+                        preload="metadata"></video>
+                </div>
             </div>
         </div>
 
@@ -76,57 +86,59 @@ get_header(); // Swellのヘッダー
         </section>
     </div>
 
-    <!-- 特集（横スクロール） -->
-    <div class="featured-banner-wrapper">
-    <div class="featured-pin">
-        <section class="featured-banner">
-            <div class="featured-track">
-                <?php
-$news_cat = get_category_by_slug('news');
-$featured_posts = new WP_Query(array(
-    'post_type'      => 'post',
-    'posts_per_page' => 3,
-    'orderby'        => 'date',
-    'order'          => 'DESC',
-    'category__not_in' => $news_cat ? array($news_cat->term_id) : array(),
-));
-if ($featured_posts->have_posts()):
-    while ($featured_posts->have_posts()):
-        $featured_posts->the_post();
-?>
-                <a href="<?php the_permalink(); ?>" class="featured-panel">
-                    <div class="featured-panel__img">
-                        <?php
-                        $youtube_id = get_post_meta(get_the_ID(), 'swell_meta_youtube', true);
-                        if (!empty($youtube_id)): ?>
-                            <div class="featured-panel__yt">
-                                <img src="https://img.youtube.com/vi/<?php echo esc_attr($youtube_id); ?>/maxresdefault.jpg"
-                                     alt="<?php the_title_attribute(); ?>"
-                                     loading="lazy">
-                                <span class="featured-panel__play" aria-hidden="true"></span>
-                            </div>
-                        <?php elseif (has_post_thumbnail()): ?>
-                            <?php the_post_thumbnail('full'); ?>
-                        <?php else: ?>
-                            <div class="featured-panel__placeholder"></div>
-                        <?php endif; ?>
+    <!-- 最新記事 -->
+    <section class="latest-feature js-fade-in" aria-label="最新記事">
+        <div class="latest-feature__inner">
+            <?php
+            $news_cat = get_category_by_slug('news');
+            $latest_post = new WP_Query(array(
+                'post_type'        => 'post',
+                'posts_per_page'   => 1,
+                'orderby'          => 'date',
+                'order'            => 'DESC',
+                'category__not_in' => $news_cat ? array($news_cat->term_id) : array(),
+            ));
+            if ($latest_post->have_posts()):
+                while ($latest_post->have_posts()):
+                    $latest_post->the_post();
+                    $categories = get_the_category();
+                    $primary_category = !empty($categories) ? $categories[0]->name : 'Article';
+                    $latest_excerpt = get_the_excerpt();
+                    if ('' === trim($latest_excerpt)) {
+                        $latest_excerpt = wp_strip_all_tags(get_the_content());
+                    }
+            ?>
+            <a href="<?php the_permalink(); ?>" class="latest-feature__card">
+                <div class="latest-feature__media">
+                    <?php
+                    $youtube_id = get_post_meta(get_the_ID(), 'swell_meta_youtube', true);
+                    if (!empty($youtube_id)): ?>
+                        <img src="https://img.youtube.com/vi/<?php echo esc_attr($youtube_id); ?>/maxresdefault.jpg"
+                             alt="<?php the_title_attribute(); ?>"
+                             loading="lazy">
+                    <?php elseif (has_post_thumbnail()): ?>
+                        <?php the_post_thumbnail('large'); ?>
+                    <?php else: ?>
+                        <div class="latest-feature__placeholder"></div>
+                    <?php endif; ?>
+                </div>
+                <div class="latest-feature__body">
+                    <div class="latest-feature__meta">
+                        <span><?php echo esc_html($primary_category); ?></span>
+                        <time datetime="<?php echo esc_attr(get_the_date('c')); ?>"><?php echo esc_html(get_the_date('Y.m.d')); ?></time>
                     </div>
-                    <div class="featured-panel__body">
-                        <span class="featured-panel__label">特集</span>
-                        <h2 class="featured-panel__title"><?php the_title(); ?></h2>
-                        <p class="featured-panel__excerpt"><?php echo esc_html(mb_substr(get_the_excerpt(), 0, 60)); ?>…</p>
-                        <span class="featured-panel__cta">続きを読む →</span>
-                    </div>
-                </a>
-                <?php
-    endwhile;
-    wp_reset_postdata();
-endif;
-?>
-            </div>
-        </section>
-    </div>
-    </div>
+                    <h2 class="latest-feature__title"><?php the_title(); ?></h2>
+                    <p class="latest-feature__excerpt"><?php echo esc_html(wp_trim_words($latest_excerpt, 58, '...')); ?></p>
+                    <span class="latest-feature__cta">続きを読む</span>
+                </div>
+            </a>
+            <?php
+                endwhile;
+                wp_reset_postdata();
+            endif;
+            ?>
+        </div>
+    </section>
 
     <!-- Contents（カテゴリ別タブ） -->
     <section class="contents">
