@@ -1430,37 +1430,78 @@ body {
   margin: 0 0 var(--space-md);
 }
 
-/* タブ（ピル型） */
+/* タブ（セグメントコントロール） */
 .contents__tabs {
-  display: flex;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-md);
+  --contents-tab-indicator-x: 5px;
+  --contents-tab-indicator-w: 59px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  max-width: 100%;
+  margin-bottom: var(--space-lg);
+  padding: 4px;
   overflow-x: auto;
+  border: 1px solid rgba(29, 29, 31, 0.06);
+  border-radius: 999px;
+  background: #ecebea;
+  box-shadow: inset 0 1px 2px rgba(29, 29, 31, 0.04);
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  position: relative;
+}
+
+.contents__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.contents__tabs::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: var(--contents-tab-indicator-w);
+  border-radius: 999px;
+  background: #050505;
+  transform: translateX(var(--contents-tab-indicator-x));
+  transition: transform 0.72s cubic-bezier(0.22, 1, 0.36, 1), width 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 0;
 }
 
 .contents__tab {
-  padding: var(--space-xs) var(--space-ms);
-  font-size: var(--text-xs);
+  position: relative;
+  z-index: 1;
+  min-width: 59px;
+  min-height: 31px;
+  padding: 0 15px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--color-text-muted);
-  background: none;
-  border: 1px solid var(--color-border);
+  line-height: 1;
+  color: #787878;
+  background: transparent;
+  border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.2s var(--ease-out-quart), border-color 0.2s var(--ease-out-quart), background 0.2s var(--ease-out-quart);
+  transition: color 0.2s var(--ease-out-quart), background 0.2s var(--ease-out-quart), transform 0.2s var(--ease-out-quart);
 }
 
 .contents__tab:hover {
   color: var(--color-text);
-  border-color: var(--color-text-muted);
+}
+
+.contents__tab:focus {
+  outline: none;
+}
+
+.contents__tab:focus-visible {
+  outline: 2px solid rgba(29, 29, 31, 0.22);
+  outline-offset: -5px;
 }
 
 .contents__tab.is-active {
   color: #fff;
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+  background: transparent;
 }
 
 /* パネル */
