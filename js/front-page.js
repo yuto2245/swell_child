@@ -146,45 +146,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    /* 特集：スクロール展開 + 横スクロール */
-    var wrapper = document.querySelector('.featured-banner-wrapper');
-    var pin = document.querySelector('.featured-pin');
-    var track = document.querySelector('.featured-track');
-
-    if (wrapper && pin && track) {
-        var panels = track.querySelectorAll('.featured-panel');
-        var panelCount = panels.length;
-        var ticking = false;
-
-        function update() {
-            var pinRect = pin.getBoundingClientRect();
-            var pinH = pin.offsetHeight;
-            var windowH = window.innerHeight;
-            var scrolled = -pinRect.top;
-            var scrollable = pinH - windowH;
-
-            /* 展開アニメーション（最初の画面分） */
-            var expandEnd = windowH * 0.5;
-            var expand = Math.min(1, Math.max(0, scrolled / expandEnd));
-            wrapper.style.setProperty('--expand', expand);
-
-            /* 横スクロール（展開後〜最後） */
-            var hStart = expandEnd;
-            var hRange = scrollable - expandEnd;
-            var hProgress = Math.min(1, Math.max(0, (scrolled - hStart) / hRange));
-            var maxShift = (panelCount - 1) * 100;
-            track.style.transform = 'translateX(-' + (hProgress * maxShift / panelCount) + '%)';
-
-            ticking = false;
-        }
-
-        window.addEventListener('scroll', function() {
-            if (!ticking) {
-                requestAnimationFrame(update);
-                ticking = true;
-            }
-        }, { passive: true });
-
-        update();
-    }
 });

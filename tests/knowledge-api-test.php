@@ -47,6 +47,11 @@ function esc_url_raw( $url ) {
 	return filter_var( (string) $url, FILTER_SANITIZE_URL );
 }
 
+function sanitize_title( $value ) {
+	$value = strtolower( preg_replace( '/[^a-zA-Z0-9_\-\x{3040}-\x{30ff}\x{3400}-\x{9fff}]+/u', '-', (string) $value ) );
+	return trim( $value, '-' );
+}
+
 function absint( $value ) {
 	return max( 0, (int) $value );
 }
@@ -115,6 +120,31 @@ assert_same( array( 'SELECT', '内部テーブル' ), $formatted['tags'], 'Forma
 assert_true( false !== strpos( $formatted['content'], 'SELECT 文の基本です。' ), 'Content should include stripped body text.' );
 assert_true( false === strpos( $formatted['content'], '<h2>' ), 'Content should strip HTML tags.' );
 
+$structured = sapjp_knowledge_format_article(
+	$post,
+	array(
+		'url'        => 'https://sapjp.net/abap-select/',
+		'categories' => array( 'ABAP' ),
+		'tags'       => array( 'SELECT' ),
+		'format'     => 'structured',
+	)
+);
+
+assert_true( isset( $structured['sections'] ), 'Structured article response should include sections.' );
+assert_same( '概要', $structured['sections'][0]['heading'], 'Structured sections should use heading text.' );
+assert_same( 'h2', $structured['sections'][0]['level'], 'Structured sections should include heading level.' );
+assert_true( false !== strpos( $structured['sections'][0]['content'], 'SELECT 文の基本です。' ), 'Structured section should include section body.' );
+
+$code_snippets = sapjp_knowledge_extract_code_snippets( $post->post_content );
+assert_same( 1, count( $code_snippets ), 'Code extraction should find fenced article code.' );
+assert_same( 'abap', $code_snippets[0]['language'], 'Unmarked SAPJP code examples should default to ABAP.' );
+assert_same( 'SELECT * FROM vbak.', $code_snippets[0]['code'], 'Code extraction should keep code text readable.' );
+
+$code_response = sapjp_knowledge_format_code_response( $formatted, $post->post_content );
+assert_same( 42, $code_response['article_id'], 'Code response should include article ID.' );
+assert_same( 'ABAP SELECTの基本', $code_response['title'], 'Code response should include article title.' );
+assert_same( 1, $code_response['count'], 'Code response should include snippet count.' );
+
 $summary = sapjp_knowledge_create_excerpt( str_repeat( 'あ', 160 ), 80 );
 assert_same( 81, mb_strlen( $summary ), 'Excerpt should be truncated and include ellipsis.' );
 assert_same( '…', mb_substr( $summary, -1 ), 'Excerpt should end with ellipsis when truncated.' );
@@ -129,6 +159,13 @@ assert_same( 'ABAP SELECT', $context['query'], 'Context response should include 
 assert_same( 1, $context['count'], 'Context response should include source count.' );
 assert_same( 42, $context['sources'][0]['id'], 'Context source should include article ID.' );
 assert_true( mb_strlen( $context['sources'][0]['content'] ) <= 121, 'Context source should respect max content length plus ellipsis.' );
+assert_true( isset( $context['citations'][0]['url'] ), 'Context response should include citation URLs for AI answers.' );
+assert_true( false !== strpos( $context['context'], 'ABAP SELECTの基本' ), 'Context response should include a prompt-ready context string.' );
+
+$topic = sapjp_knowledge_format_topic_response( 'ABAP', array( $formatted ) );
+assert_same( 'abap', $topic['topic'], 'Topic response should normalize the topic key.' );
+assert_same( 1, $topic['count'], 'Topic response should include article count.' );
+assert_same( 42, $topic['items'][0]['id'], 'Topic response should include matching article summaries.' );
 
 assert_true( sapjp_knowledge_is_public_article( $post ), 'Published posts without a password should be public API sources.' );
 
