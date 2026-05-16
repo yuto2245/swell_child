@@ -104,6 +104,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     /* Contentsタブ切り替え */
     var tabs = Array.prototype.slice.call(document.querySelectorAll('.contents__tab'));
+    var tabList = document.querySelector('.contents__tabs');
+    var tabIndicatorTimer;
+
+    function updateTabIndicator(tab) {
+        if (!tabList || !tab) {
+            return;
+        }
+
+        var listRect = tabList.getBoundingClientRect();
+        var tabRect = tab.getBoundingClientRect();
+        var x = tabRect.left - listRect.left + tabList.scrollLeft;
+
+        tabList.style.setProperty('--contents-tab-indicator-x', x + 'px');
+        tabList.style.setProperty('--contents-tab-indicator-w', tabRect.width + 'px');
+    }
 
     function activateTab(tab) {
         var slug = tab.dataset.tab;
@@ -121,7 +136,15 @@ document.addEventListener('DOMContentLoaded', function() {
         tab.classList.add('is-active');
         tab.setAttribute('aria-selected', 'true');
         tab.setAttribute('tabindex', '0');
-        tab.focus();
+        window.clearTimeout(tabIndicatorTimer);
+        tabIndicatorTimer = window.setTimeout(function() {
+            window.requestAnimationFrame(function() {
+                updateTabIndicator(tab);
+            });
+        }, 120);
+        if (document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('contents__tab')) {
+            tab.focus();
+        }
     }
 
     tabs.forEach(function(tab) {
@@ -145,5 +168,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    if (tabs.length) {
+        updateTabIndicator(tabs.find(function(tab) {
+            return tab.classList.contains('is-active');
+        }) || tabs[0]);
+
+        window.addEventListener('resize', function() {
+            updateTabIndicator(tabs.find(function(tab) {
+                return tab.classList.contains('is-active');
+            }) || tabs[0]);
+        });
+    }
 
 });
