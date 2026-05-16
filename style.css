@@ -636,10 +636,11 @@ body {
 ============================================================ */
 .hero-section {
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100vh - 94px);
+  padding: clamp(28px, 4vh, 48px) 0 34px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   background: var(--color-bg);
   overflow: hidden;
   color: var(--color-text);
@@ -678,14 +679,14 @@ body {
 
 /* ヒーローコンテナ（上下左右中央） */
 .hero-container {
-  max-width: 900px;
-  margin: auto;
+  max-width: 1100px;
+  margin: 0 auto;
   padding: 0 var(--space-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: var(--space-md);
+  gap: 18px;
   position: relative;
   z-index: 2;
 }
@@ -695,14 +696,17 @@ body {
 }
 
 .hero-description {
-  max-width: 540px;
+  width: min(100%, 1040px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* ヒーロータイトル（グラデーションテキスト） */
 .hero-title {
-  font-size: var(--text-4xl);
+  font-size: clamp(58px, 6.2vw, 72px);
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.08;
   margin: 0;
   letter-spacing: -0.02em;
   color: var(--color-text);
@@ -718,10 +722,11 @@ body {
 }
 
 .hero-subtitle {
+  max-width: 540px;
+  margin: 0 auto;
   font-size: var(--text-base);
   color: var(--color-text-muted);
-  line-height: 1.8;
-  margin: 0;
+  line-height: 1.7;
 }
 
 /* ヒーローコマンド（API導線） */
@@ -730,9 +735,9 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  width: min(100%, 650px);
-  min-height: 58px;
-  margin-top: var(--space-ms);
+  width: min(100%, 720px);
+  min-height: 56px;
+  margin-top: 16px;
   padding: 0 18px 0 26px;
   border: 1px solid rgba(29, 29, 31, 0.12);
   border-radius: 999px;
@@ -809,8 +814,8 @@ body {
 }
 
 .hero-video {
-  width: min(100%, 650px);
-  margin-top: var(--space-ms);
+  width: min(100%, 1000px);
+  margin-top: 24px;
   overflow: hidden;
   border: 1px solid rgba(29, 29, 31, 0.12);
   border-radius: 18px;
@@ -944,48 +949,6 @@ body {
 .hero-marquee {
   opacity: 0;
   animation: fadeSlideUp 0.8s var(--ease-out-expo) 1.2s forwards;
-}
-
-/* ============================================================
-   ビジュアルセクション（互い違い配置）
-============================================================ */
-.visual-wrapper {
-  margin-left: calc(-50vw + 50%);
-  width: 100vw;
-  margin-top: var(--space-md);
-  margin-bottom: var(--space-2xl);
-}
-
-.visual-section {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: var(--space-ms);
-  padding: 0 var(--space-md);
-}
-
-.visual__col {
-  overflow: hidden;
-}
-
-.visual__col--left {
-  padding-top: 0;
-}
-
-.visual__col--right {
-  margin-top: var(--space-2xl);
-}
-
-.visual__img {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 4 / 3;
-  display: block;
-  object-fit: cover;
-  transition: transform 0.6s var(--ease-out-quart);
-}
-
-.visual__col:hover .visual__img {
-  transform: scale(1.02);
 }
 
 /* ============================================================
@@ -1211,15 +1174,6 @@ body {
     padding: var(--space-md) var(--space-md) var(--space-sm);
   }
 
-  .visual-section {
-    gap: var(--space-xs);
-    padding: 0 var(--space-ms);
-  }
-
-  .visual__col--right {
-    margin-top: var(--space-xl);
-  }
-
   .latest-feature {
     padding-right: var(--space-md);
     padding-left: var(--space-md);
@@ -1291,17 +1245,6 @@ body {
 
   .hero-marquee__label {
     text-align: center;
-  }
-
-  /* ビジュアル */
-  .visual-section {
-    grid-template-columns: 1fr;
-    gap: var(--space-xs);
-    padding: 0 var(--space-sm);
-  }
-
-  .visual__col--right {
-    margin-top: var(--space-md);
   }
 
   .latest-feature {

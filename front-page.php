@@ -21,15 +21,24 @@ get_header(); // Swellのヘッダー
         <div class="hero-container">
             <div class="hero-content">
                 <h1 class="hero-title">
-                    <span class="hero-line">SAP<span class="hero-underline">キャリア</span>と</span>
-                    <span class="hero-line"><span class="hero-underline">技術</span>の最前線を</span>
-                    <span class="hero-line">発信するメディア</span>
+                    <span class="hero-line">SAP Knowledge</span>
+                    <span class="hero-line"><span class="hero-underline">Built</span> for AI</span>
                 </h1>
             </div>
             <div class="hero-description">
                 <p class="hero-subtitle">
                     SAPは世界中の企業を支える基幹システムです。SAP-JPは、SAPプロフェッショナルのキャリア形成と最新技術の実践的な情報をお届けします。
                 </p>
+                <div class="hero-video" aria-label="SAPJP Knowledge APIのターミナル実行デモ">
+                    <video
+                        class="hero-video__media"
+                        src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/videos/sapjp-terminal-api-demo.mp4"
+                        muted
+                        autoplay
+                        loop
+                        playsinline
+                        preload="metadata"></video>
+                </div>
                 <a href="<?php echo esc_url(home_url('/api')); ?>" class="hero-command" aria-label="APIドキュメントでコマンド実行例を見る">
                     <code class="hero-command__text">
                         <span class="hero-command__muted">curl</span>
@@ -42,16 +51,6 @@ get_header(); // Swellのヘッダー
                         </svg>
                     </span>
                 </a>
-                <div class="hero-video" aria-label="SAPJP Knowledge APIのターミナル実行デモ">
-                    <video
-                        class="hero-video__media"
-                        src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/videos/sapjp-terminal-api-demo.mp4"
-                        muted
-                        autoplay
-                        loop
-                        playsinline
-                        preload="metadata"></video>
-                </div>
             </div>
         </div>
 
@@ -73,18 +72,6 @@ get_header(); // Swellのヘッダー
             </div>
         </div>
     </section>
-
-    <!-- ビジュアルセクション -->
-    <div class="visual-wrapper">
-        <section class="visual-section js-fade-in" aria-label="ビジュアル">
-            <div class="visual__col visual__col--left">
-                <img src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/img/visual-desert.jpg" alt="砂漠の風景" class="visual__img" loading="lazy">
-            </div>
-            <div class="visual__col visual__col--right">
-                <img src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/img/hero-bg.jpg" alt="技術イメージ" class="visual__img" loading="lazy">
-            </div>
-        </section>
-    </div>
 
     <!-- 最新記事 -->
     <section class="latest-feature js-fade-in" aria-label="最新記事">

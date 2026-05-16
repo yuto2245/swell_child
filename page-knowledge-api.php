@@ -37,7 +37,10 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 			<p>Knowledge</p>
 			<a href="#search">Search articles</a>
 			<a href="#article">Retrieve article</a>
+			<a href="#structured">Structured article</a>
+			<a href="#code">Code snippets</a>
 			<a href="#context">Context for AI</a>
+			<a href="#topics">Topics</a>
 			<p>Resources</p>
 			<a href="#safety">Safety</a>
 			<a href="#next">MCP roadmap</a>
@@ -134,8 +137,23 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 						</tr>
 						<tr>
 							<td><code>GET</code></td>
+							<td><code>/wp-json/sapjp/v1/articles/{id}?format=structured</code></td>
+							<td>記事を見出し単位のセクションとして取得する</td>
+						</tr>
+						<tr>
+							<td><code>GET</code></td>
+							<td><code>/wp-json/sapjp/v1/articles/{id}/code</code></td>
+							<td>記事内のABAPコード例を抽出する</td>
+						</tr>
+						<tr>
+							<td><code>GET</code></td>
 							<td><code>/wp-json/sapjp/v1/context</code></td>
 							<td>AI向けに短く整形された文脈を取得する</td>
+						</tr>
+						<tr>
+							<td><code>GET</code></td>
+							<td><code>/wp-json/sapjp/v1/topics/{topic}</code></td>
+							<td>カテゴリまたはタグの関連記事を取得する</td>
 						</tr>
 					</tbody>
 				</table>
@@ -151,7 +169,7 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 					<code>category</code> でカテゴリスラッグを指定し、<code>limit</code> で最大件数を制限できます。
 				</p>
 				<ul class="sapjp-docs__list">
-					<li><code>query</code>: 検索キーワード</li>
+					<li><code>query</code> / <code>q</code>: 検索キーワード</li>
 					<li><code>category</code>: カテゴリスラッグ。任意</li>
 					<li><code>limit</code>: 最大20件。任意</li>
 				</ul>
@@ -177,6 +195,46 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 			</div>
 		</section>
 
+		<section id="structured" class="sapjp-docs__section sapjp-docs__split">
+			<div>
+				<p class="sapjp-docs__eyebrow">Structured</p>
+				<h2>見出し単位で取得する</h2>
+				<p>
+					<code>format=structured</code> を指定すると、記事本文に加えて <code>sections</code> を返します。
+					AIに「どの見出しの内容か」を渡したい場合に使います。
+				</p>
+			</div>
+			<div class="sapjp-docs__code">
+				<div class="sapjp-docs__code-title">Request</div>
+				<pre><code>curl "<?php echo esc_html( $api_base ); ?>/articles/123?format=structured"</code></pre>
+			</div>
+		</section>
+
+		<section id="code" class="sapjp-docs__section sapjp-docs__split">
+			<div>
+				<p class="sapjp-docs__eyebrow">Code</p>
+				<h2>ABAPコード例を抽出する</h2>
+				<p>
+					記事中のコードブロックだけを抽出します。
+					ABAPレビューAIやコード例検索の材料として使いやすい形式です。
+				</p>
+			</div>
+			<div class="sapjp-docs__code">
+				<div class="sapjp-docs__code-title">Response</div>
+				<pre><code>{
+  "article_id": 123,
+  "title": "ABAP SELECTの基本",
+  "count": 1,
+  "snippets": [
+    {
+      "language": "abap",
+      "code": "SELECT * FROM vbak."
+    }
+  ]
+}</code></pre>
+			</div>
+		</section>
+
 		<section id="context" class="sapjp-docs__section sapjp-docs__split">
 			<div>
 				<p class="sapjp-docs__eyebrow">Context</p>
@@ -196,6 +254,7 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
 				<pre><code>{
   "query": "ABAP SELECT",
   "count": 1,
+  "context": "## ABAP SELECTの基本\nURL: https://sapjp.net/example/\nSELECT文の基本...",
   "sources": [
     {
       "id": 123,
@@ -205,8 +264,30 @@ $api_base = home_url( '/wp-json/sapjp/v1' );
       "categories": ["ABAP"],
       "tags": ["SELECT"]
     }
+  ],
+  "citations": [
+    {
+      "id": 123,
+      "title": "ABAP SELECTの基本",
+      "url": "https://sapjp.net/example/"
+    }
   ]
 }</code></pre>
+			</div>
+		</section>
+
+		<section id="topics" class="sapjp-docs__section sapjp-docs__split">
+			<div>
+				<p class="sapjp-docs__eyebrow">Topics</p>
+				<h2>カテゴリ・タグから取得する</h2>
+				<p>
+					<code>topics</code> はカテゴリスラッグまたはタグスラッグで記事を取得します。
+					ABAP、SAP、S/4HANAなどの領域別ナレッジ一覧に使えます。
+				</p>
+			</div>
+			<div class="sapjp-docs__code">
+				<div class="sapjp-docs__code-title">Request</div>
+				<pre><code>curl "<?php echo esc_html( $api_base ); ?>/topics/abap?limit=5"</code></pre>
 			</div>
 		</section>
 
