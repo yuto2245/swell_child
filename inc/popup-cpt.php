@@ -185,8 +185,6 @@ function sapjp_popup_render_meta_box( $post ) {
 	$variant       = get_post_meta( $post->ID, '_popup_variant', true ) ?: 'classic';
 	$badge_text    = get_post_meta( $post->ID, '_popup_badge_text', true );
 	$later_text    = get_post_meta( $post->ID, '_popup_later_text', true );
-	$sub_text      = get_post_meta( $post->ID, '_popup_sub_text', true );
-	$sub_url       = get_post_meta( $post->ID, '_popup_sub_url', true );
 	$cta_text      = get_post_meta( $post->ID, '_popup_cta_text', true );
 	$cta_url       = get_post_meta( $post->ID, '_popup_cta_url', true );
 	$cookie_days   = get_post_meta( $post->ID, '_popup_cookie_days', true );
@@ -205,7 +203,6 @@ function sapjp_popup_render_meta_box( $post ) {
 
 	if ( '' === $badge_text )  { $badge_text  = '新機能'; }
 	if ( '' === $later_text )  { $later_text  = '後で'; }
-	if ( '' === $sub_text )    { $sub_text    = '詳細を見る'; }
 	if ( '' === $cta_text )    { $cta_text    = '試してみる'; }
 	if ( '' === $cookie_days ) { $cookie_days = 30; }
 	if ( '' === $delay_ms )    { $delay_ms    = 1500; }
@@ -313,17 +310,6 @@ function sapjp_popup_render_meta_box( $post ) {
 			<p class="field-desc">左側のテキストリンク（クリックで閉じる）。空欄で非表示。</p>
 		</div>
 
-		<label for="popup_sub_text">ゴースト ラベル</label>
-		<div>
-			<input type="text" name="popup_sub_text" id="popup_sub_text" value="<?php echo esc_attr( $sub_text ); ?>">
-		</div>
-
-		<label for="popup_sub_url">ゴースト URL</label>
-		<div>
-			<input type="url" name="popup_sub_url" id="popup_sub_url" value="<?php echo esc_attr( $sub_url ); ?>" placeholder="https://...">
-			<p class="field-desc">空欄の場合、クリックで閉じるのみ。</p>
-		</div>
-
 		<label for="popup_cta_text">CTA ラベル</label>
 		<div>
 			<input type="text" name="popup_cta_text" id="popup_cta_text" value="<?php echo esc_attr( $cta_text ); ?>">
@@ -399,13 +385,13 @@ add_action( 'save_post_' . SAPJP_POPUP_CPT, function ( $post_id ) {
 	}
 	update_post_meta( $post_id, '_popup_variant', $variant );
 
-	$text_fields = array( 'badge_text', 'later_text', 'sub_text', 'cta_text' );
+	$text_fields = array( 'badge_text', 'later_text', 'cta_text' );
 	foreach ( $text_fields as $f ) {
 		$val = isset( $_POST[ "popup_$f" ] ) ? sanitize_text_field( wp_unslash( $_POST[ "popup_$f" ] ) ) : '';
 		update_post_meta( $post_id, "_popup_$f", $val );
 	}
 
-	$url_fields = array( 'sub_url', 'cta_url' );
+	$url_fields = array( 'cta_url' );
 	foreach ( $url_fields as $f ) {
 		$val = isset( $_POST[ "popup_$f" ] ) ? esc_url_raw( wp_unslash( $_POST[ "popup_$f" ] ) ) : '';
 		update_post_meta( $post_id, "_popup_$f", $val );

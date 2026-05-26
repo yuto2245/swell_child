@@ -653,8 +653,6 @@ function sapjp_popup_render_variant_classic( $post ) {
 	$description = $post->post_content;
 	$badge_text  = get_post_meta( $post->ID, '_popup_badge_text', true );
 	$later_text  = get_post_meta( $post->ID, '_popup_later_text', true );
-	$sub_text    = get_post_meta( $post->ID, '_popup_sub_text', true );
-	$sub_url     = get_post_meta( $post->ID, '_popup_sub_url', true );
 	$cta_text    = get_post_meta( $post->ID, '_popup_cta_text', true );
 	$cta_url     = get_post_meta( $post->ID, '_popup_cta_url', true );
 	$thumb_id    = get_post_thumbnail_id( $post->ID );
@@ -760,8 +758,6 @@ function sapjp_popup_render_variant_carded( $post ) {
 	$cards         = json_decode( $cards_json, true );
 	if ( ! is_array( $cards ) ) { $cards = array(); }
 	$changelog_url = get_post_meta( $post->ID, '_popup_changelog_url', true );
-	$sub_text      = get_post_meta( $post->ID, '_popup_sub_text', true );
-	$sub_url       = get_post_meta( $post->ID, '_popup_sub_url', true );
 	$cta_text      = get_post_meta( $post->ID, '_popup_cta_text', true );
 	$cta_url       = get_post_meta( $post->ID, '_popup_cta_url', true );
 	$icons         = sapjp_popup_card_icon_svgs();
@@ -869,8 +865,6 @@ function sapjp_popup_render_variant_playful( $post ) {
 	$mini_tags   = sapjp_popup_parse_mini_tags( $mini_raw );
 	$badge_text  = get_post_meta( $post->ID, '_popup_badge_text', true );
 	$later_text  = get_post_meta( $post->ID, '_popup_later_text', true );
-	$sub_text    = get_post_meta( $post->ID, '_popup_sub_text', true );
-	$sub_url     = get_post_meta( $post->ID, '_popup_sub_url', true );
 	$cta_text    = get_post_meta( $post->ID, '_popup_cta_text', true );
 	$cta_url     = get_post_meta( $post->ID, '_popup_cta_url', true );
 	?>
