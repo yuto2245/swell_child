@@ -39,6 +39,7 @@ get_header(); // Swellのヘッダー
                         playsinline
                         preload="metadata"></video>
                 </div>
+                <p class="hero-command-label">Knowledge API をコマンドで試す</p>
                 <a href="<?php echo esc_url(home_url('/api')); ?>" class="hero-command" aria-label="APIドキュメントでコマンド実行例を見る">
                     <code class="hero-command__text">
                         <span class="hero-command__muted">curl</span>

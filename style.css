@@ -813,6 +813,17 @@ body {
   }
 }
 
+/* ヒーローコマンドのラベル（CTAの説明） */
+.hero-command-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 6px;
+  opacity: 0.85;
+}
+
 .hero-video {
   width: min(100%, 1000px);
   margin-top: 24px;
