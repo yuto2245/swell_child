@@ -48,10 +48,10 @@ add_filter( 'swell_parts_head_logo', function( $html, $is_fixbar ) {
  */
 add_action('wp_enqueue_scripts', function() {
 
-	/* Google Fonts（Inter + Noto Sans JP、font-display=swap） */
+	/* Google Fonts（Inter + Noto Sans JP + Plus Jakarta Sans、font-display=swap） */
 	wp_enqueue_style(
 		'google-fonts',
-		'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600&display=swap',
+		'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500&display=swap',
 		[],
 		null
 	);

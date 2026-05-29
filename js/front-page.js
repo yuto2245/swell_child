@@ -88,6 +88,147 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    /* ヒーロー見出し（x.ai 風: 単語 blur reveal + ローテーション + 下線シマー） */
+    function initHeroTitleAnimation() {
+        var title = document.getElementById('hero-title');
+        if (!title) {
+            return;
+        }
+
+        title.classList.add('hero-title--js');
+
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var staticWords = title.querySelectorAll('.hero-word:not(.hero-word--rotate)');
+        var rotateRoot = title.querySelector('.hero-rotate');
+        var rotateWord = title.querySelector('.hero-word--rotate');
+
+        function revealStaticWords() {
+            staticWords.forEach(function(word) {
+                word.classList.add('is-visible');
+            });
+        }
+
+        function buildCharSpans(word) {
+            var frag = document.createDocumentFragment();
+            word.split('').forEach(function(char, index) {
+                var span = document.createElement('span');
+                span.className = 'hero-char';
+                span.style.setProperty('--hero-char-index', String(index));
+                span.textContent = char;
+                frag.appendChild(span);
+            });
+            return frag;
+        }
+
+        function measureRotateWidth(word, sizer, clip) {
+            if (!sizer || !clip) {
+                return;
+            }
+            sizer.textContent = word;
+            clip.style.width = sizer.scrollWidth + 'px';
+        }
+
+        function setRotateWord(rotateEl, word, animateIn) {
+            var clip = rotateEl.querySelector('.hero-rotate__clip');
+            var charsEl = rotateEl.querySelector('.hero-rotate__chars');
+            var sizer = rotateEl.querySelector('.hero-rotate__sizer');
+            if (!clip || !charsEl) {
+                return;
+            }
+
+            charsEl.textContent = '';
+            charsEl.appendChild(buildCharSpans(word));
+            measureRotateWidth(word, sizer, clip);
+
+            if (!animateIn) {
+                charsEl.querySelectorAll('.hero-char').forEach(function(char) {
+                    char.classList.add('is-visible');
+                });
+                rotateEl.classList.add('is-active');
+                return;
+            }
+
+            window.requestAnimationFrame(function() {
+                charsEl.querySelectorAll('.hero-char').forEach(function(char) {
+                    char.classList.add('is-visible');
+                });
+                rotateEl.classList.add('is-active');
+            });
+        }
+
+        function exitRotateChars(charsEl) {
+            var chars = charsEl.querySelectorAll('.hero-char');
+            chars.forEach(function(char) {
+                char.classList.remove('is-visible');
+                char.classList.add('is-exiting');
+            });
+            return chars.length;
+        }
+
+        function initRotate(rotateEl, rotateSlot) {
+            var words = (rotateEl.getAttribute('data-rotate-words') || '')
+                .split(',')
+                .map(function(word) { return word.trim(); })
+                .filter(Boolean);
+
+            if (!words.length) {
+                if (rotateSlot) {
+                    rotateSlot.classList.add('is-visible');
+                }
+                return;
+            }
+
+            var index = 0;
+            var charsEl = rotateEl.querySelector('.hero-rotate__chars');
+            var cycling = false;
+
+            setRotateWord(rotateEl, words[0], !reduceMotion);
+            if (rotateSlot) {
+                rotateSlot.classList.add('is-visible');
+            }
+
+            if (reduceMotion || words.length < 2) {
+                return;
+            }
+
+            window.setInterval(function() {
+                if (cycling || !charsEl) {
+                    return;
+                }
+                cycling = true;
+                index = (index + 1) % words.length;
+                var nextWord = words[index];
+                var exitCount = exitRotateChars(charsEl);
+
+                window.setTimeout(function() {
+                    setRotateWord(rotateEl, nextWord, true);
+                    cycling = false;
+                }, exitCount * 18 + 160);
+            }, 3200);
+        }
+
+        if (reduceMotion) {
+            revealStaticWords();
+            if (rotateRoot) {
+                initRotate(rotateRoot, rotateWord);
+            }
+            return;
+        }
+
+        window.requestAnimationFrame(function() {
+            revealStaticWords();
+        });
+
+        var rotateDelay = 40 * staticWords.length + 320;
+        window.setTimeout(function() {
+            if (rotateRoot) {
+                initRotate(rotateRoot, rotateWord);
+            }
+        }, rotateDelay);
+    }
+
+    initHeroTitleAnimation();
+
     /* フェードインアニメーション */
     var observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {

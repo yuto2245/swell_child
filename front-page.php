@@ -5,6 +5,10 @@
  */
 
 get_header(); // Swellのヘッダー
+
+$hero_rotate_words = array( 'AI', 'ABAP', 'Context', 'API' );
+$hero_rotate_sizer = 'Context';
+$hero_title_words  = array( 'SAP', 'Knowledge', 'Built', 'for' );
 ?>
 
 <main class="anthropic-page">
@@ -20,9 +24,27 @@ get_header(); // Swellのヘッダー
         <!-- Hero Content -->
         <div class="hero-container">
             <div class="hero-content">
-                <h1 class="hero-title">
-                    <span class="hero-line">SAP Knowledge</span>
-                    <span class="hero-line"><span class="hero-underline">Built</span> for AI</span>
+                <h1 class="hero-title" id="hero-title">
+                    <span class="hero-line">
+                        <?php foreach ( array_slice( $hero_title_words, 0, 2 ) as $word_index => $word ) : ?>
+                        <span class="hero-word" style="--hero-word-index: <?php echo esc_attr( (string) $word_index ); ?>"><?php echo esc_html( $word ); ?></span>
+                        <?php endforeach; ?>
+                    </span>
+                    <span class="hero-line">
+                        <?php foreach ( array_slice( $hero_title_words, 2, 2 ) as $offset => $word ) : ?>
+                        <?php $word_index = $offset + 2; ?>
+                        <span class="hero-word" style="--hero-word-index: <?php echo esc_attr( (string) $word_index ); ?>"><?php echo esc_html( $word ); ?></span>
+                        <?php endforeach; ?>
+                        <span class="hero-word hero-word--rotate" style="--hero-word-index: 4">
+                            <span class="hero-rotate" data-rotate-words="<?php echo esc_attr( implode( ',', $hero_rotate_words ) ); ?>">
+                                <span class="hero-rotate__sizer" aria-hidden="true"><?php echo esc_html( $hero_rotate_sizer ); ?></span>
+                                <span class="hero-rotate__clip">
+                                    <span class="hero-rotate__chars" aria-live="polite"><?php echo esc_html( $hero_rotate_words[0] ); ?></span>
+                                </span>
+                                <span class="hero-rotate__underline" aria-hidden="true"></span>
+                            </span>
+                        </span>
+                    </span>
                 </h1>
             </div>
             <div class="hero-description">

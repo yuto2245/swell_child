@@ -29,6 +29,7 @@
 
   /* タイポグラフィ */
   --font-main: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: 'Noto Serif JP', Georgia, serif;
   --text-xs: 13px;
   --text-sm: 15px;
@@ -702,23 +703,150 @@ body {
   align-items: center;
 }
 
-/* ヒーロータイトル（グラデーションテキスト） */
+/* ヒーロータイトル（x.ai 風: typography + word blur reveal + rotate） */
 .hero-title {
-  font-size: clamp(58px, 6.2vw, 72px);
-  font-weight: 600;
-  line-height: 1.08;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 1.6rem + 2.8vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.05;
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--color-text);
+  perspective: 1200px;
 }
 
-/* 下線装飾 */
-.hero-underline {
-  text-decoration: none;
-  background-image: linear-gradient(var(--color-text-muted), var(--color-text-muted));
-  background-position: 0 88%;
-  background-size: 100% 1.5px;
-  background-repeat: no-repeat;
+.hero-title .hero-line {
+  display: block;
+}
+
+.hero-title .hero-word {
+  display: inline-block;
+  position: relative;
+  margin-right: 0.22em;
+}
+
+.hero-title--js .hero-word {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translate3d(0, 0.35em, 0);
+  will-change: opacity, filter, transform;
+}
+
+.hero-title--js .hero-word.is-visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity 0.55s var(--ease-out-expo),
+    filter 0.55s var(--ease-out-expo),
+    transform 0.55s var(--ease-out-expo);
+  transition-delay: calc(var(--hero-word-index, 0) * 40ms);
+}
+
+.hero-title .hero-word--rotate {
+  vertical-align: bottom;
+  margin-right: 0;
+}
+
+.hero-rotate {
+  position: relative;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.hero-rotate__sizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  height: auto;
+  width: auto;
+}
+
+.hero-rotate__clip {
+  display: inline-flex;
+  overflow: hidden;
+  clip-path: inset(-4px 0);
+  transition: width 0.45s var(--ease-out-expo);
+}
+
+.hero-rotate__chars {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.hero-char {
+  display: inline-block;
+}
+
+.hero-title--js .hero-char {
+  opacity: 0;
+  filter: blur(10px);
+  transform: translate3d(0, 0.28em, 0);
+  will-change: opacity, filter, transform;
+}
+
+.hero-title--js .hero-char.is-visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity 0.42s var(--ease-out-expo),
+    filter 0.42s var(--ease-out-expo),
+    transform 0.42s var(--ease-out-expo);
+  transition-delay: calc(var(--hero-char-index, 0) * 28ms);
+}
+
+.hero-title--js .hero-char.is-exiting {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translate3d(0, -0.22em, 0);
+  transition:
+    opacity 0.28s var(--ease-out-expo),
+    filter 0.28s var(--ease-out-expo),
+    transform 0.28s var(--ease-out-expo);
+  transition-delay: calc(var(--hero-char-index, 0) * 18ms);
+}
+
+.hero-rotate__underline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 3px;
+  border-radius: 999px;
+  transform-origin: left center;
+  background-image: linear-gradient(
+    90deg,
+    rgba(29, 29, 31, 0.18) 0%,
+    rgba(29, 29, 31, 0.18) 35%,
+    #6366f1 40%,
+    #a855f7 45%,
+    #ec4899 50%,
+    #f97316 55%,
+    #eab308 60%,
+    rgba(29, 29, 31, 0.18) 65%,
+    rgba(29, 29, 31, 0.18) 100%
+  );
+  background-size: 220% 100%;
+  opacity: 0;
+  animation: heroRotateUnderlineShimmer 2.8s linear infinite;
+  transition: opacity 0.45s var(--ease-out-expo);
+}
+
+.hero-rotate.is-active .hero-rotate__underline {
+  opacity: 1;
+}
+
+@keyframes heroRotateUnderlineShimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 }
 
 .hero-subtitle {
@@ -927,39 +1055,31 @@ body {
   }
 }
 
-/* タイトルの各行を順番にアニメーション */
-.hero-title .hero-line {
-  display: block;
+/* 説明・動画・CTA の段階的フェードイン（ヒーロー見出しアニメ後） */
+.hero-subtitle {
   opacity: 0;
-  animation: fadeSlideUp 1s var(--ease-out-expo) forwards;
-  background: linear-gradient(223deg, #1D1D1F 0%, #3A7BBF 120%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  animation: fadeSlideUp 1s var(--ease-out-expo) 1.15s forwards;
 }
 
-.hero-title .hero-line:nth-child(1) {
-  animation-delay: 0.2s;
-}
-
-.hero-title .hero-line:nth-child(2) {
-  animation-delay: 0.45s;
-}
-
-.hero-title .hero-line:nth-child(3) {
-  animation-delay: 0.7s;
-}
-
-/* 説明文のフェードイン */
-.hero-description {
+.hero-video {
   opacity: 0;
-  animation: fadeSlideUp 1s var(--ease-out-expo) 0.95s forwards;
+  animation: fadeSlideUp 1s var(--ease-out-expo) 1.25s forwards;
+}
+
+.hero-command-label {
+  opacity: 0;
+  animation: fadeSlideUp 1s var(--ease-out-expo) 1.3s forwards;
+}
+
+.hero-command {
+  opacity: 0;
+  animation: fadeSlideUp 1s var(--ease-out-expo) 1.35s forwards;
 }
 
 /* マーキーのフェードイン */
 .hero-marquee {
   opacity: 0;
-  animation: fadeSlideUp 0.8s var(--ease-out-expo) 1.2s forwards;
+  animation: fadeSlideUp 0.8s var(--ease-out-expo) 1.5s forwards;
 }
 
 /* ============================================================
@@ -2294,11 +2414,28 @@ body.is-header-scrolled .c-siteLogo__name {
     transform: none;
   }
 
-  .hero-title .hero-line {
-    opacity: 1;
+  .hero-title--js .hero-word,
+  .hero-title--js .hero-char {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
   }
 
-  .hero-description {
+  .hero-rotate__clip {
+    width: auto !important;
+    transition: none !important;
+  }
+
+  .hero-rotate__underline {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+
+  .hero-subtitle,
+  .hero-video,
+  .hero-command-label,
+  .hero-command {
     opacity: 1;
   }
 
