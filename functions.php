@@ -61,8 +61,14 @@ add_action('wp_enqueue_scripts', function() {
 
 	/* トップページ用JS */
 	if ( is_front_page() ) {
-		$js_timestamp = date( 'Ymdgis', filemtime( get_stylesheet_directory() . '/js/front-page.js' ) );
-		wp_enqueue_script( 'front-page-js', get_stylesheet_directory_uri() . '/js/front-page.js', [], $js_timestamp, true );
+		$js_path = get_stylesheet_directory() . '/js/front-page.js';
+		wp_enqueue_script(
+			'front-page-js',
+			get_stylesheet_directory_uri() . '/js/front-page.js',
+			array(),
+			file_exists( $js_path ) ? (string) filemtime( $js_path ) : null,
+			true
+		);
 	}
 
 	$header_js_path = get_stylesheet_directory() . '/js/header-scroll.js';

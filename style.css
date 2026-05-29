@@ -734,7 +734,7 @@ body {
 
 .hero-title--js .hero-word.is-visible {
   opacity: 1;
-  filter: blur(0);
+  filter: none;
   transform: translate3d(0, 0, 0);
   transition:
     opacity 0.55s var(--ease-out-expo),
@@ -768,7 +768,7 @@ body {
 .hero-rotate__clip {
   display: inline-flex;
   overflow: hidden;
-  clip-path: inset(-4px 0);
+  clip-path: inset(-4px 0 -4px 0);
   transition: width 0.45s var(--ease-out-expo);
 }
 
@@ -790,7 +790,7 @@ body {
 
 .hero-title--js .hero-char.is-visible {
   opacity: 1;
-  filter: blur(0);
+  filter: none;
   transform: translate3d(0, 0, 0);
   transition:
     opacity 0.42s var(--ease-out-expo),
