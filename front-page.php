@@ -9,6 +9,39 @@ get_header(); // Swellのヘッダー
 $hero_rotate_words = array( 'AI', 'ABAP', 'Context', 'API' );
 $hero_rotate_sizer = 'Context';
 $hero_title_words  = array( 'SAP', 'Knowledge', 'Built', 'for' );
+
+$developer_api_base = home_url( '/wp-json/sapjp/v1' );
+$developer_tabs     = array(
+	array(
+		'id'      => 'context',
+		'label'   => 'cURL',
+		'command' => 'curl "' . $developer_api_base . '/context?query=ABAP"',
+	),
+	array(
+		'id'      => 'search',
+		'label'   => 'Search',
+		'command' => 'curl "' . $developer_api_base . '/search?query=ABAP&limit=5"',
+	),
+	array(
+		'id'      => 'articles',
+		'label'   => 'Articles',
+		'command' => 'curl "' . $developer_api_base . '/articles/123"',
+	),
+);
+$developer_stats    = array(
+	array(
+		'value' => '5+',
+		'label' => 'API endpoints',
+	),
+	array(
+		'value' => 'JSON',
+		'label' => 'Structured output',
+	),
+	array(
+		'value' => 'RAG',
+		'label' => 'Context-ready',
+	),
+);
 ?>
 
 <main class="anthropic-page">
@@ -54,47 +87,39 @@ $hero_title_words  = array( 'SAP', 'Knowledge', 'Built', 'for' );
                 <div class="hero-video" aria-label="SAPJP Knowledge APIのターミナル実行デモ">
                     <video
                         class="hero-video__media"
-                        src="<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/videos/sapjp-terminal-api-demo.mp4"
+                        src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/videos/sapjp-terminal-api-demo.mp4' ); ?>"
                         muted
                         autoplay
                         loop
                         playsinline
                         preload="metadata"></video>
                 </div>
-                <p class="hero-command-label">Knowledge API をコマンドで試す</p>
-                <a href="<?php echo esc_url(home_url('/api')); ?>" class="hero-command" aria-label="APIドキュメントでコマンド実行例を見る">
-                    <code class="hero-command__text">
-                        <span class="hero-command__muted">curl</span>
-                        <span class="hero-command__url">https://sapjp.net/wp-json/sapjp/v1/context?query=ABAP</span>
-                    </code>
-                    <span class="hero-command__copy" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false">
-                            <rect x="9" y="9" width="11" height="11" rx="2"></rect>
-                            <path d="M5 15V6.5A1.5 1.5 0 0 1 6.5 5H15"></path>
-                        </svg>
-                    </span>
-                </a>
-            </div>
-        </div>
-
-        <!-- Logo Marquee -->
-        <div class="hero-marquee">
-            <div class="hero-marquee__label">Topics we<br>cover</div>
-            <div class="hero-marquee__track-wrap">
-                <div class="hero-marquee__track">
-                    <?php
-                    $brands = array('S/4HANA', 'ABAP', 'Fiori', 'BTP', 'AI', 'SAP Basis', 'RFC', 'CDS View');
-                    for ($loop = 0; $loop < 2; $loop++):
-                        foreach ($brands as $brand):
-                    ?>
-                    <div class="hero-marquee__item">
-                        <span class="hero-marquee__name"><?php echo esc_html($brand); ?></span>
-                    </div>
-                    <?php endforeach; endfor; ?>
-                </div>
             </div>
         </div>
     </section>
+
+    <?php require get_stylesheet_directory() . '/inc/developer-section.php'; ?>
+
+    <!-- Topics マーキー（developer セクション直下） -->
+    <div class="hero-marquee hero-marquee--after-dev">
+        <div class="hero-marquee__label">Topics we<br>cover</div>
+        <div class="hero-marquee__track-wrap">
+            <div class="hero-marquee__track">
+                <?php
+                $brands = array( 'S/4HANA', 'ABAP', 'Fiori', 'BTP', 'AI', 'SAP Basis', 'RFC', 'CDS View' );
+                for ( $loop = 0; $loop < 2; $loop++ ) :
+                    foreach ( $brands as $brand ) :
+                        ?>
+                <div class="hero-marquee__item">
+                    <span class="hero-marquee__name"><?php echo esc_html( $brand ); ?></span>
+                </div>
+                        <?php
+                    endforeach;
+                endfor;
+                ?>
+            </div>
+        </div>
+    </div>
 
     <!-- 最新記事 -->
     <section class="latest-feature js-fade-in" aria-label="最新記事">

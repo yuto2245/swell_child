@@ -344,4 +344,97 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    /* For developers セクション（x.ai 風: タブ切替 + コピー） */
+    function initSapjpDeveloper() {
+        var root = document.getElementById('sapjp-developer');
+        if (!root) {
+            return;
+        }
+
+        var tabButtons = root.querySelectorAll('[data-sapjp-dev-tab]');
+        var panels = root.querySelectorAll('[data-sapjp-dev-panel]');
+        var copyBtn = root.querySelector('[data-sapjp-dev-copy]');
+        var copyLabel = copyBtn ? copyBtn.querySelector('.sapjp-developer__copy-text') : null;
+        var copyResetTimer;
+
+        function getActivePanel() {
+            return root.querySelector('.sapjp-developer__code.is-active');
+        }
+
+        function activateDevTab(tabId) {
+            tabButtons.forEach(function(btn) {
+                var isActive = btn.getAttribute('data-sapjp-dev-tab') === tabId;
+                btn.classList.toggle('is-active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+            panels.forEach(function(panel) {
+                var isActive = panel.getAttribute('data-sapjp-dev-panel') === tabId;
+                panel.classList.toggle('is-active', isActive);
+                if (isActive) {
+                    panel.removeAttribute('hidden');
+                } else {
+                    panel.setAttribute('hidden', '');
+                }
+            });
+            root.setAttribute('data-active-tab', tabId);
+        }
+
+        tabButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                activateDevTab(btn.getAttribute('data-sapjp-dev-tab'));
+            });
+        });
+
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                var panel = getActivePanel();
+                var text = panel ? panel.getAttribute('data-command') : '';
+                if (!text) {
+                    return;
+                }
+
+                function onCopied() {
+                    copyBtn.classList.add('is-copied');
+                    if (copyLabel) {
+                        copyLabel.textContent = 'Copied';
+                    }
+                    window.clearTimeout(copyResetTimer);
+                    copyResetTimer = window.setTimeout(function() {
+                        copyBtn.classList.remove('is-copied');
+                        if (copyLabel) {
+                            copyLabel.textContent = 'Copy';
+                        }
+                    }, 2000);
+                }
+
+                function fallbackCopy(value, done) {
+                    var textarea = document.createElement('textarea');
+                    textarea.value = value;
+                    textarea.setAttribute('readonly', '');
+                    textarea.style.position = 'absolute';
+                    textarea.style.left = '-9999px';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        document.execCommand('copy');
+                        done();
+                    } catch (err) {
+                        /* noop */
+                    }
+                    document.body.removeChild(textarea);
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(onCopied).catch(function() {
+                        fallbackCopy(text, onCopied);
+                    });
+                } else {
+                    fallbackCopy(text, onCopied);
+                }
+            });
+        }
+    }
+
+    initSapjpDeveloper();
+
 });
