@@ -94,6 +94,15 @@
 		});
 	}
 
+	function focusWithoutRing(el) {
+		if (!el || typeof el.focus !== 'function') return;
+		try {
+			el.focus({ focusVisible: false });
+		} catch (e) {
+			el.focus();
+		}
+	}
+
 	function onKeydown(e) {
 		if (e.key === 'Escape' || e.keyCode === 27) {
 			e.preventDefault();
@@ -144,10 +153,10 @@
 
 		setTimeout(function () {
 			if (closeBtn) {
-				closeBtn.focus();
+				focusWithoutRing(closeBtn);
 			} else {
 				var focusables = getFocusable();
-				if (focusables.length) focusables[0].focus();
+				if (focusables.length) focusWithoutRing(focusables[0]);
 			}
 		}, 50);
 	}
