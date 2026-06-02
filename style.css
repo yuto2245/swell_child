@@ -2195,18 +2195,61 @@ body.is-header-scrolled .c-siteLogo__name {
   }
 }
 
-/* フッターをダークに */
+/* フッター（サイト基調 #F8F7F5 と統一） */
 .l-footer {
-  background: var(--color-bg-dark) !important;
-  color: white !important;
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+  border-top: 1px solid var(--color-border);
+}
+
+.l-footer__widgetArea {
+  background: var(--color-bg-alt) !important;
+  color: var(--color-text) !important;
 }
 
 .l-footer a {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: var(--color-text-muted) !important;
 }
 
 .l-footer a:hover {
-  color: white !important;
+  color: var(--color-text) !important;
+}
+
+.l-footer .copyright {
+  color: var(--color-text-muted);
+}
+
+.l-footer .copyright a {
+  color: var(--color_link, #1176d4) !important;
+}
+
+.l-footer .copyright a:hover {
+  color: var(--color-text) !important;
+}
+
+.l-footer .c-widget__title.-footer {
+  color: var(--color-text);
+}
+
+.l-footer .c-listMenu a,
+.l-footer .widget_recent_entries a {
+  color: var(--color-text-muted) !important;
+}
+
+.l-footer .c-listMenu a:hover,
+.l-footer .widget_recent_entries a:hover {
+  color: var(--color-text) !important;
+  background-color: rgba(29, 29, 31, 0.04);
+}
+
+.l-footer .tag-cloud-link {
+  color: var(--color-text) !important;
+  background: #f0efec !important;
+}
+
+.l-footer .tag-cloud-link:hover {
+  color: var(--color-text) !important;
+  background: #e8e7e4 !important;
 }
 
 /* ============================================================
