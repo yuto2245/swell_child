@@ -148,11 +148,12 @@ $developer_stats    = array(
                     <?php
                     $youtube_id = get_post_meta(get_the_ID(), 'swell_meta_youtube', true);
                     if (!empty($youtube_id)): ?>
-                        <img src="https://img.youtube.com/vi/<?php echo esc_attr($youtube_id); ?>/maxresdefault.jpg"
+                        <img src="https://img.youtube.com/vi/<?php echo esc_attr($youtube_id); ?>/hqdefault.jpg"
                              alt="<?php the_title_attribute(); ?>"
-                             loading="lazy">
+                             decoding="async"
+                             fetchpriority="high">
                     <?php elseif (has_post_thumbnail()): ?>
-                        <?php the_post_thumbnail('large'); ?>
+                        <?php echo sapjp_render_post_image(get_the_ID(), 'front_feature'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php else: ?>
                         <div class="latest-feature__placeholder"></div>
                     <?php endif; ?>
@@ -248,7 +249,10 @@ unset($t);
                     <a href="<?php the_permalink(); ?>" class="contents__card">
                         <div class="contents__thumb">
                             <?php if (has_post_thumbnail()): ?>
-                                <?php the_post_thumbnail('medium_large'); ?>
+                                <?php
+                                $thumb_context = ( 0 === $idx ) ? 'front_card' : 'front_card_deferred';
+                                echo sapjp_render_post_image(get_the_ID(), $thumb_context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                ?>
                             <?php else: ?>
                                 <div class="contents__thumb-placeholder"></div>
                             <?php endif; ?>
@@ -302,7 +306,7 @@ if ($popular_posts->have_posts()):
                     <a href="<?php the_permalink(); ?>" class="popular__link">
                         <?php if (has_post_thumbnail()): ?>
                         <div class="popular__thumb">
-                            <?php the_post_thumbnail('medium_large'); ?>
+                            <?php echo sapjp_render_post_image(get_the_ID(), 'front_card'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </div>
                         <?php endif; ?>
                         <div class="popular__body">
