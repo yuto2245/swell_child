@@ -274,9 +274,9 @@ unset($t);
 
     <!-- Popular posts（人気記事） -->
     <section class="popular">
-        <div class="popular__inner">
-            <h2 class="popular__heading js-fade-in">Popular</h2>
-            <div class="popular__grid">
+        <div class="contents__inner">
+            <h2 class="contents__heading js-fade-in">Popular</h2>
+            <div class="contents__grid">
                 <?php
 $popular_posts = new WP_Query(array(
     'post_type'      => 'post',
@@ -296,30 +296,24 @@ if (!$popular_posts->have_posts()) {
     ));
 }
 
-$i = 0;
 if ($popular_posts->have_posts()):
     while ($popular_posts->have_posts()):
         $popular_posts->the_post();
-        $cats = get_the_category();
 ?>
-                <article class="popular__card js-fade-in" style="--card-index: <?php echo esc_attr($i); ?>">
-                    <a href="<?php the_permalink(); ?>" class="popular__link">
+                <a href="<?php the_permalink(); ?>" class="contents__card">
+                    <div class="contents__thumb">
                         <?php if (has_post_thumbnail()): ?>
-                        <div class="popular__thumb">
                             <?php echo sapjp_render_post_image(get_the_ID(), 'front_card'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                        </div>
+                        <?php else: ?>
+                            <div class="contents__thumb-placeholder"></div>
                         <?php endif; ?>
-                        <div class="popular__body">
-                            <?php if (!empty($cats)): ?>
-                            <span class="popular__cat"><?php echo esc_html($cats[0]->name); ?></span>
-                            <?php endif; ?>
-                            <h3 class="popular__title"><?php the_title(); ?></h3>
-                            <time class="popular__date"><?php echo get_the_date('Y.m.d'); ?></time>
-                        </div>
-                    </a>
-                </article>
+                    </div>
+                    <div class="contents__body">
+                        <time class="contents__date"><?php echo get_the_date('Y.m.d'); ?></time>
+                        <h3 class="contents__name"><?php the_title(); ?></h3>
+                    </div>
+                </a>
                 <?php
-        $i++;
     endwhile;
     wp_reset_postdata();
 endif;
