@@ -12,7 +12,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 $the_id = ( is_array( $variable ) && ! empty( $variable['post_id'] ) ) ? (int) $variable['post_id'] : 0;
 
 $post_data = $the_id ? get_post( $the_id ) : get_post();
-$the_id    = $the_id ?: $post_data->ID;
+if ( ! $post_data instanceof WP_Post ) {
+	return;
+}
+
+$the_id = $the_id ?: $post_data->ID;
+
+if ( ! is_post_publicly_viewable( $post_data ) ) {
+	return;
+}
+
 $the_title = get_the_title( $the_id );
 
 $categories       = get_the_category( $the_id );
