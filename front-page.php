@@ -42,6 +42,34 @@ $developer_stats    = array(
 		'label' => 'Context-ready',
 	),
 );
+
+$hero_glass_video_url = get_stylesheet_directory_uri() . '/assets/videos/sapjp-terminal-api-demo.mp4';
+$hero_glass_cards     = array(
+	array(
+		'label'      => 'ABAP',
+		'aria_label' => 'ABAP カテゴリの記事を見る',
+		'href'       => home_url( '/category/abap/' ),
+		'stage'      => 'chat',
+	),
+	array(
+		'label'      => 'API',
+		'aria_label' => 'Knowledge API ドキュメントを見る',
+		'href'       => home_url( '/api' ),
+		'stage'      => 'api',
+	),
+	array(
+		'label'      => 'SAP',
+		'aria_label' => 'SAP カテゴリの記事を見る',
+		'href'       => home_url( '/category/sap/' ),
+		'stage'      => 'sap',
+	),
+	array(
+		'label'      => '開発基礎',
+		'aria_label' => '開発基礎カテゴリの記事を見る',
+		'href'       => home_url( '/category/development/' ),
+		'stage'      => 'terminal',
+	),
+);
 ?>
 
 <main class="anthropic-page">
@@ -84,16 +112,7 @@ $developer_stats    = array(
                 <p class="hero-subtitle">
                     SAPは世界中の企業を支える基幹システムです。SAP-JPは、SAPプロフェッショナルのキャリア形成と最新技術の実践的な情報をお届けします。
                 </p>
-                <div class="hero-video" aria-label="SAPJP Knowledge APIのターミナル実行デモ">
-                    <video
-                        class="hero-video__media"
-                        src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/videos/sapjp-terminal-api-demo.mp4' ); ?>"
-                        muted
-                        autoplay
-                        loop
-                        playsinline
-                        preload="metadata"></video>
-                </div>
+                <?php require get_stylesheet_directory() . '/inc/hero-glass-cards.php'; ?>
             </div>
         </div>
     </section>
@@ -177,7 +196,7 @@ $developer_stats    = array(
     </section>
 
     <!-- Contents（カテゴリ別タブ） -->
-    <section class="contents">
+    <section class="contents" id="contents">
         <div class="contents__inner">
             <h2 class="contents__heading js-fade-in">Contents</h2>
             <?php
