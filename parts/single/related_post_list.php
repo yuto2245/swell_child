@@ -101,7 +101,7 @@ $list_class = 'sapjp-related-grid';
 		if ( '' === $priority_list && ! $q->have_posts() ) :
 			$not_founded_text = __( '関連する記事はまだ見つかりませんでした。', 'swell' );
 			echo apply_filters( 'swell_related_post_404_text', '<p class="sapjp-related-section__empty">' . $not_founded_text . '</p>' ); // phpcs:ignore
-		elseif ( $q->have_posts() ) :
+		elseif ( $q->have_posts() || '' !== $priority_list ) :
 			echo '<ul class="' . esc_attr( $list_class ) . '">';
 			echo $priority_list; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 

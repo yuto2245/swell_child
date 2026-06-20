@@ -46,8 +46,8 @@ function sapjp_get_image_context_config( $context ) {
 		'front_feature'       => array(
 			'size'          => 'sapjp_feature',
 			'sizes'         => '(min-width: 1024px) 50vw, 100vw',
-			'loading'       => 'eager',
-			'fetchpriority' => 'high',
+			'loading'       => 'lazy',
+			'fetchpriority' => '',
 			'class'         => '',
 			'deferred'      => false,
 		),

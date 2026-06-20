@@ -35,7 +35,7 @@ if ( ! function_exists( 'sapjp_render_hero_glass_stage' ) ) {
 				autoplay
 				loop
 				playsinline
-				preload="metadata"
+				preload="none"
 				aria-label="<?php echo esc_attr__( 'SAPJP Knowledge APIのターミナル実行デモ', 'swell_child' ); ?>"></video>
 			<?php
 			return;
