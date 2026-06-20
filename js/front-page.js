@@ -8,9 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        title.classList.add('hero-title--js');
-
         var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var isMobilePerf = window.matchMedia('(max-width: 767px)').matches;
         var staticWords = title.querySelectorAll('.hero-word:not(.hero-word--rotate)');
         var rotateRoot = title.querySelector('.hero-rotate');
         var rotateWord = title.querySelector('.hero-word--rotate');
@@ -20,6 +19,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 word.classList.add('is-visible');
             });
         }
+
+        /* モバイル / reduce-motion: blur 非表示を使わず即描画（LCP 改善） */
+        if (isMobilePerf || reduceMotion) {
+            if (rotateRoot) {
+                rotateRoot.classList.add('is-active');
+            }
+            if (rotateWord) {
+                rotateWord.classList.add('is-visible');
+            }
+            return;
+        }
+
+        title.classList.add('hero-title--js');
 
         function buildCharSpans(word) {
             var frag = document.createDocumentFragment();

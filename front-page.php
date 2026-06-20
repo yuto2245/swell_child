@@ -169,8 +169,8 @@ $hero_glass_cards     = array(
                     if (!empty($youtube_id)): ?>
                         <img src="https://img.youtube.com/vi/<?php echo esc_attr($youtube_id); ?>/hqdefault.jpg"
                              alt="<?php the_title_attribute(); ?>"
-                             decoding="async"
-                             fetchpriority="high">
+                             loading="lazy"
+                             decoding="async">
                     <?php elseif (has_post_thumbnail()): ?>
                         <?php echo sapjp_render_post_image(get_the_ID(), 'front_feature'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php else: ?>

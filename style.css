@@ -900,6 +900,14 @@ body {
   }
 }
 
+/* モバイル: LCP 改善 — ガラスカードを即表示（アニメ遅延で opacity:0 にしない） */
+@media (max-width: 767px) {
+  .hero-glass-card {
+    opacity: 1;
+    animation: none;
+  }
+}
+
 .hero-glass-card {
   position: relative;
   display: block;
