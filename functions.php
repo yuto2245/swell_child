@@ -594,6 +594,32 @@ require_once get_stylesheet_directory() . '/inc/popup-cpt.php';
 require_once get_stylesheet_directory() . '/inc/knowledge-api.php';
 require_once get_stylesheet_directory() . '/inc/performance/images.php';
 require_once get_stylesheet_directory() . '/inc/performance/front.php';
+require_once get_stylesheet_directory() . '/inc/ui/related-posts.php';
+
+/**
+ * 関連記事カード用スタイル（記事ページのみ）
+ */
+add_action(
+	'wp_enqueue_scripts',
+	function () {
+		if ( is_admin() || ! is_singular( 'post' ) ) {
+			return;
+		}
+
+		$css_path = get_stylesheet_directory() . '/assets/ui/related-posts.css';
+		if ( ! file_exists( $css_path ) ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'sapjp-ui-related-posts',
+			get_stylesheet_directory_uri() . '/assets/ui/related-posts.css',
+			array( 'child_style' ),
+			(string) filemtime( $css_path )
+		);
+	},
+	30
+);
 
 /**
  * フロント配信判定：配信対象 or プレビュー対象を返す
