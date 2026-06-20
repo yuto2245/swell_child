@@ -10,39 +10,6 @@ $hero_rotate_words = array( 'AI', 'ABAP', 'Context', 'API' );
 $hero_rotate_sizer = 'Context';
 $hero_title_words  = array( 'SAP', 'Knowledge', 'Built', 'for' );
 
-$developer_api_base = home_url( '/wp-json/sapjp/v1' );
-$developer_tabs     = array(
-	array(
-		'id'      => 'context',
-		'label'   => 'cURL',
-		'command' => 'curl "' . $developer_api_base . '/context?query=ABAP"',
-	),
-	array(
-		'id'      => 'search',
-		'label'   => 'Search',
-		'command' => 'curl "' . $developer_api_base . '/search?query=ABAP&limit=5"',
-	),
-	array(
-		'id'      => 'articles',
-		'label'   => 'Articles',
-		'command' => 'curl "' . $developer_api_base . '/articles/123"',
-	),
-);
-$developer_stats    = array(
-	array(
-		'value' => '5+',
-		'label' => 'API endpoints',
-	),
-	array(
-		'value' => 'JSON',
-		'label' => 'Structured output',
-	),
-	array(
-		'value' => 'RAG',
-		'label' => 'Context-ready',
-	),
-);
-
 $hero_glass_video_url = get_stylesheet_directory_uri() . '/assets/videos/sapjp-terminal-api-demo.mp4';
 $hero_glass_cards     = array(
 	array(
@@ -117,9 +84,7 @@ $hero_glass_cards     = array(
         </div>
     </section>
 
-    <?php require get_stylesheet_directory() . '/inc/developer-section.php'; ?>
-
-    <!-- Topics マーキー（developer セクション直下） -->
+    <!-- Topics マーキー -->
     <div class="hero-marquee hero-marquee--after-dev">
         <div class="hero-marquee__label">Topics we<br>cover</div>
         <div class="hero-marquee__track-wrap">
