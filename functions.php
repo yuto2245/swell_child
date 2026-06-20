@@ -11,12 +11,56 @@
 
 
 /**
- * Google Fonts preconnect ヒント
+ * Google Fonts preconnect ヒント（fonts のみ — preconnect 過多を避ける）
  */
-add_action('wp_head', function() {
-	echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
-	echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
-}, 1);
+add_action(
+	'wp_head',
+	function () {
+		echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
+		echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
+	},
+	1
+);
+
+/**
+ * 記事ページのみ jsDelivr へ dns-prefetch（preconnect は使わない）
+ */
+add_action(
+	'wp_head',
+	function () {
+		if ( ! is_singular() || is_front_page() ) {
+			return;
+		}
+		echo '<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">' . "\n";
+	},
+	2
+);
+
+/**
+ * Google Fonts CSS を非ブロッキング読み込み（SWELL load_css_async と同方式）
+ *
+ * @param string $html   Link tag HTML.
+ * @param string $handle Style handle.
+ * @param string $href   Stylesheet URL.
+ * @param string $media  Media attribute.
+ * @return string
+ */
+add_filter(
+	'style_loader_tag',
+	function ( $html, $handle, $href, $media ) {
+		if ( 'google-fonts' !== $handle ) {
+			return $html;
+		}
+
+		$default_html = trim( $html );
+
+		// phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet
+		return '<link rel="stylesheet" id="' . esc_attr( $handle ) . '-css" href="' . esc_url( $href ) . '" media="print" onload="this.media=\'all\'">' .
+			'<noscript> ' . $default_html . '</noscript>' . "\n";
+	},
+	10,
+	4
+);
 
 /**
  * SVGロゴ
@@ -48,10 +92,10 @@ add_filter( 'swell_parts_head_logo', function( $html, $is_fixbar ) {
  */
 add_action('wp_enqueue_scripts', function() {
 
-	/* Google Fonts（Inter + Noto Sans JP + Plus Jakarta Sans、font-display=swap） */
+	/* Google Fonts（軽量ウェイト + font-display=swap、非ブロッキングは style_loader_tag で制御） */
 	wp_enqueue_style(
 		'google-fonts',
-		'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500&display=swap',
+		'https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+JP:wght@400;500&family=Plus+Jakarta+Sans:wght@500&display=swap',
 		[],
 		null
 	);

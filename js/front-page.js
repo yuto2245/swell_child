@@ -142,19 +142,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function startHeroWhenReady() {
-        if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(initHeroTitleAnimation).catch(initHeroTitleAnimation);
-        } else {
-            initHeroTitleAnimation();
-        }
+        initHeroTitleAnimation();
     }
 
     startHeroWhenReady();
 
     /* パーティクルアニメーション（ライト背景用・ヒーロー初期化とは独立） */
+    function shouldSkipStarCanvas() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return true;
+        }
+        if (window.matchMedia('(max-width: 767px)').matches) {
+            return true;
+        }
+        var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn && conn.saveData) {
+            return true;
+        }
+        return false;
+    }
+
     function initStarCanvas() {
         var canvas = document.getElementById('star-canvas');
-        if (!canvas) {
+        if (!canvas || shouldSkipStarCanvas()) {
             return;
         }
 
