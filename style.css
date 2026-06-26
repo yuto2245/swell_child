@@ -2590,9 +2590,39 @@ body.is-header-scrolled .c-siteLogo__name {
   background-color: rgba(29, 29, 31, 0.04);
 }
 
+/*
+ * カテゴリー / タグ（SWELL 準拠の補正）
+ * - 記事上部メタだけ 11px になる SWELL 既定を 12px に揃える
+ * - タグクラウドの WordPress インライン font-size を SWELL と同じ固定値にする
+ */
+.p-articleMetas.-top .p-articleMetas__termList {
+  font-size: 12px;
+}
+
+.tagcloud .tag-cloud-link,
+.wp-block-tag-cloud .tag-cloud-link {
+  font-size: 12px !important;
+}
+
+.tagcloud .tag-cloud-link .tag-link-count {
+  font-size: inherit;
+}
+
+@media (min-width: 600px) {
+  .tagcloud .tag-cloud-link,
+  .wp-block-tag-cloud .tag-cloud-link {
+    font-size: 13px !important;
+  }
+}
+
 .l-footer .tag-cloud-link {
+  font-size: 13px !important;
   color: var(--color-text) !important;
   background: #f0efec !important;
+}
+
+.w-beforeFooter .tag-cloud-link {
+  font-size: 13px !important;
 }
 
 .l-footer .tag-cloud-link:hover {
