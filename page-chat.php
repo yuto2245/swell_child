@@ -44,9 +44,10 @@ if ( ! current_user_can( 'manage_options' ) ) {
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 					</button>
 					<div id="chat-plus-dropdown" class="chat-plus-menu__dropdown">
-						<button class="chat-plus-menu__item" data-action="web-search" type="button">
+						<button id="chat-web-search-toggle" class="chat-plus-menu__item" data-action="web-search" type="button">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
 							<span>ウェブ検索</span>
+							<span class="chat-plus-menu__toggle-indicator"></span>
 						</button>
 						<button class="chat-plus-menu__item" data-action="code" type="button">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
